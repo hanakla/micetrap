@@ -89,7 +89,7 @@ export enum KeyBindings {
     ctrlEnd = "ctrl+end",
 }
 
-export default class Mousetrap {
+export class Mousetrap {
     /**
      * mapping of special keycodes to their corresponding keys
      *
