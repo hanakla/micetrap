@@ -227,21 +227,6 @@ export class Mousetrap {
     }
 
     /**
-     * cross browser add event method
-     */
-    private static _addEvent(
-        object: HTMLElement | HTMLDocument,
-        type: string,
-        callback: (e: KeyboardEvent) => void,
-        options: AddEventListenerOptions
-    ): void {
-        if (object.addEventListener) {
-            object.addEventListener(type, callback, options);
-            return;
-        }
-    }
-
-    /**
      * takes the event and returns the key character
      */
     private static _characterFromEvent(e: KeyboardEvent): string {
