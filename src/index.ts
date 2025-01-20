@@ -21,6 +21,9 @@
  *
  * Changed by: JonWallsten - Converted to ES2015 and TypeScript.
  * @version 1.0.0
+ *
+ * Changed by: Hanakla - Refine APIs for modern usage.
+ * @version 1.0.0
  */
 
 type StringMap = {
@@ -69,16 +72,16 @@ export type CallbackFunction = (e?: KeyboardEvent, combo?: string) => boolean;
  * This is useful if you want to have a single entry to combos instead of letting devs create their own combos.
  */
 export enum KeyBindings {
-    moveUp = 'up',
-    moveDown = 'down',
-    moveRight = 'right',
-    moveLeft = 'left',
-    pageUp = 'pageup',
-    pageDown = 'pagedown',
-    home = 'home',
-    end = 'end',
-    ctrlHome = 'ctrl+home',
-    ctrlEnd = 'ctrl+end'
+    moveUp = "up",
+    moveDown = "down",
+    moveRight = "right",
+    moveLeft = "left",
+    pageUp = "pageup",
+    pageDown = "pagedown",
+    home = "home",
+    end = "end",
+    ctrlHome = "ctrl+home",
+    ctrlEnd = "ctrl+end",
 }
 
 export default class Mousetrap {
@@ -90,28 +93,28 @@ export default class Mousetrap {
      * keyup/keydown events
      */
     private static _MAP: StringMap = {
-        8: 'backspace',
-        9: 'tab',
-        13: 'enter',
-        16: 'shift',
-        17: 'ctrl',
-        18: 'alt',
-        20: 'capslock',
-        27: 'esc',
-        32: 'space',
-        33: 'pageup',
-        34: 'pagedown',
-        35: 'end',
-        36: 'home',
-        37: 'left',
-        38: 'up',
-        39: 'right',
-        40: 'down',
-        45: 'ins',
-        46: 'del',
-        91: 'meta',
-        93: 'meta',
-        224: 'meta'
+        8: "backspace",
+        9: "tab",
+        13: "enter",
+        16: "shift",
+        17: "ctrl",
+        18: "alt",
+        20: "capslock",
+        27: "esc",
+        32: "space",
+        33: "pageup",
+        34: "pagedown",
+        35: "end",
+        36: "home",
+        37: "left",
+        38: "up",
+        39: "right",
+        40: "down",
+        45: "ins",
+        46: "del",
+        91: "meta",
+        93: "meta",
+        224: "meta",
     };
 
     /**
@@ -121,22 +124,22 @@ export default class Mousetrap {
      * keyup or keydown event to one of these keys
      */
     private static _KEYCODE_MAP: StringMap = {
-        106: '*',
-        107: '+',
-        109: '-',
-        110: '.',
-        111 : '/',
-        186: ';',
-        187: '=',
-        188: ',',
-        189: '-',
-        190: '.',
-        191: '/',
-        192: '`',
-        219: '[',
-        220: '\\',
-        221: ']',
-        222: '\''
+        106: "*",
+        107: "+",
+        109: "-",
+        110: ".",
+        111: "/",
+        186: ";",
+        187: "=",
+        188: ",",
+        189: "-",
+        190: ".",
+        191: "/",
+        192: "`",
+        219: "[",
+        220: "\\",
+        221: "]",
+        222: "'",
     };
 
     /**
@@ -148,25 +151,25 @@ export default class Mousetrap {
      * note that this will only work reliably on US keyboards
      */
     private static _SHIFT_MAP: StringMap = {
-        '~': '`',
-        '!': '1',
-        '@': '2',
-        '#': '3',
-        '$': '4',
-        '%': '5',
-        '^': '6',
-        '&': '7',
-        '*': '8',
-        '(': '9',
-        ')': '0',
-        '_': '-',
-        '+': '=',
-        ':': ';',
-        '\"': '\'',
-        '<': ',',
-        '>': '.',
-        '?': '/',
-        '|': '\\'
+        "~": "`",
+        "!": "1",
+        "@": "2",
+        "#": "3",
+        $: "4",
+        "%": "5",
+        "^": "6",
+        "&": "7",
+        "*": "8",
+        "(": "9",
+        ")": "0",
+        _: "-",
+        "+": "=",
+        ":": ";",
+        '"': "'",
+        "<": ",",
+        ">": ".",
+        "?": "/",
+        "|": "\\",
     };
 
     /**
@@ -175,13 +178,13 @@ export default class Mousetrap {
      *
      * @type {Object}
      */
-    private static _SPECIAL_ALIASES: {[key: string]: string} = {
-        'option': 'alt',
-        'command': 'meta',
-        'return': 'enter',
-        'escape': 'esc',
-        'plus': '+',
-        'mod': /Mac|iPod|iPhone|iPad/.test(navigator.platform) ? 'meta' : 'ctrl'
+    private static _SPECIAL_ALIASES: { [key: string]: string } = {
+        option: "alt",
+        command: "meta",
+        return: "enter",
+        escape: "esc",
+        plus: "+",
+        mod: /Mac|iPod|iPhone|iPad/.test(navigator.platform) ? "meta" : "ctrl",
     };
 
     /**
@@ -191,20 +194,19 @@ export default class Mousetrap {
      */
     private static _REVERSE_MAP: StringMap;
 
-    private static _mapSpecialKeys (): void {
+    private static _mapSpecialKeys(): void {
         /**
          * loop through the f keys, f1 to f19 and add them to the map
          * programatically
          */
         for (let i = 1; i < 20; ++i) {
-            Mousetrap._MAP[111 + i] = 'f' + i;
+            Mousetrap._MAP[111 + i] = "f" + i;
         }
 
         /**
          * loop through to map numbers on the numeric keypad
          */
         for (let i = 0; i <= 9; ++i) {
-
             // This needs to use a string cause otherwise since 0 is falsey
             // mousetrap will never fire for numpad 0 pressed as part of a keydown
             // event.
@@ -212,18 +214,22 @@ export default class Mousetrap {
             // @see https://github.com/ccampbell/mousetrap/pull/258
             Mousetrap._MAP[i + 96] = i.toString();
         }
-
     }
     /**
      * cross browser add event method
      */
-    private static _addEvent (object: HTMLElement | HTMLDocument, type: string, callback: (e: KeyboardEvent) => void, useCapture?: boolean): void {
+    private static _addEvent(
+        object: HTMLElement | HTMLDocument,
+        type: string,
+        callback: (e: KeyboardEvent) => void,
+        useCapture?: boolean
+    ): void {
         if (object.addEventListener) {
             object.addEventListener(type, callback, useCapture || false);
             return;
         }
         // IE-specific attachEvent is no longer available
-        (object as any).attachEvent('on' + type, callback);
+        (object as any).attachEvent("on" + type, callback);
     }
 
     /**
@@ -234,23 +240,26 @@ export default class Mousetrap {
      * @param {Function} callback
      * @returns void
      */
-    private static _removeEvent (object: HTMLElement | HTMLDocument, type: string, callback: (e: KeyboardEvent) => void) {
+    private static _removeEvent(
+        object: HTMLElement | HTMLDocument,
+        type: string,
+        callback: (e: KeyboardEvent) => void
+    ) {
         if (object.removeEventListener) {
             object.removeEventListener(type, callback, false);
             return;
         }
 
         // IE-specific attachEvent is no longer available
-        (object as any).detachEvent('on' + type, callback);
+        (object as any).detachEvent("on" + type, callback);
     }
 
     /**
      * takes the event and returns the key character
      */
-    private static _characterFromEvent (e: KeyboardEvent): string {
-
+    private static _characterFromEvent(e: KeyboardEvent): string {
         // for keypress events we should return the character as is
-        if (e.type === 'keypress') {
+        if (e.type === "keypress") {
             let character = String.fromCharCode(e.which);
 
             // if the shift key is not pressed then it is safe to assume
@@ -289,30 +298,33 @@ export default class Mousetrap {
     /**
      * checks if two arrays are equal
      */
-    private static _modifiersMatch (modifiers1: Modifiers, modifiers2: Modifiers): boolean {
-        return modifiers1.sort().join(',') === modifiers2.sort().join(',');
+    private static _modifiersMatch(
+        modifiers1: Modifiers,
+        modifiers2: Modifiers
+    ): boolean {
+        return modifiers1.sort().join(",") === modifiers2.sort().join(",");
     }
 
     /**
      * takes a key event and figures out what the modifiers are
      */
-    private static _eventModifiers (e: KeyboardEvent): Modifiers {
+    private static _eventModifiers(e: KeyboardEvent): Modifiers {
         const modifiers: Modifiers = [];
 
         if (e.shiftKey) {
-            modifiers.push('shift');
+            modifiers.push("shift");
         }
 
         if (e.altKey) {
-            modifiers.push('alt');
+            modifiers.push("alt");
         }
 
         if (e.ctrlKey) {
-            modifiers.push('ctrl');
+            modifiers.push("ctrl");
         }
 
         if (e.metaKey) {
-            modifiers.push('meta');
+            modifiers.push("meta");
         }
 
         return modifiers;
@@ -321,7 +333,7 @@ export default class Mousetrap {
     /**
      * prevents default for this event
      */
-    private static _preventDefault (e: Event): void {
+    private static _preventDefault(e: Event): void {
         if (e.preventDefault) {
             e.preventDefault();
             return;
@@ -333,7 +345,7 @@ export default class Mousetrap {
     /**
      * stops propogation for this event
      */
-    private static _stopPropagation (e: Event): void {
+    private static _stopPropagation(e: Event): void {
         if (e.stopPropagation) {
             e.stopPropagation();
             return;
@@ -345,19 +357,20 @@ export default class Mousetrap {
     /**
      * determines if the keycode specified is a modifier key or not
      */
-    private static _isModifier (key: string): boolean {
-        return key === 'shift' || key === 'ctrl' || key === 'alt' || key === 'meta';
+    private static _isModifier(key: string): boolean {
+        return (
+            key === "shift" || key === "ctrl" || key === "alt" || key === "meta"
+        );
     }
 
     /**
      * reverses the map lookup so that we can look for specific keys
      * to see what can and can't use keypress
      */
-    private static _getReverseMap (): StringMap {
+    private static _getReverseMap(): StringMap {
         if (!Mousetrap._REVERSE_MAP) {
             Mousetrap._REVERSE_MAP = {};
             for (const key in Mousetrap._MAP) {
-
                 // pull out the numeric keypad from here cause keypress should
                 // be able to detect the keys from the character
                 if ((key as any) > 95 && (key as any) < 112) {
@@ -375,18 +388,21 @@ export default class Mousetrap {
     /**
      * picks the best action based on the key combination
      */
-    private static _pickBestAction (key: string, modifiers: Modifiers, action: string) {
-
+    private static _pickBestAction(
+        key: string,
+        modifiers: Modifiers,
+        action: string
+    ) {
         // if no action was picked in we should try to pick the one
         // that we think would work best for this key
         if (!action) {
-            action = Mousetrap._getReverseMap()[key] ? 'keydown' : 'keypress';
+            action = Mousetrap._getReverseMap()[key] ? "keydown" : "keypress";
         }
 
         // modifier keys don't work as expected with keypress,
         // switch to keydown
-        if (action === 'keypress' && modifiers.length) {
-            action = 'keydown';
+        if (action === "keypress" && modifiers.length) {
+            action = "keydown";
         }
 
         return action;
@@ -395,27 +411,27 @@ export default class Mousetrap {
     /**
      * Converts from a string key combination to an array
      */
-    private static _keysFromString (combination: string): string[] {
-        if (combination === '+') {
-            return ['+'];
+    private static _keysFromString(combination: string): string[] {
+        if (combination === "+") {
+            return ["+"];
         }
 
-        combination = combination.replace(/\+{2}/g, '+plus');
-        return combination.split('+');
+        combination = combination.replace(/\+{2}/g, "+plus");
+        return combination.split("+");
     }
 
     /**
      * Gets info for a specific key combination
      * @returns {Object}
      */
-    private static _getKeyInfo (combination: string, action?: string): KeyInfo {
+    private static _getKeyInfo(combination: string, action?: string): KeyInfo {
         let keys: string[];
         let key: string;
         let i: number;
         const modifiers: string[] = [];
 
-            // take the keys from this pattern and figure out what the actual
-            // pattern is all about
+        // take the keys from this pattern and figure out what the actual
+        // pattern is all about
         keys = Mousetrap._keysFromString(combination);
 
         for (i = 0; i < keys.length; ++i) {
@@ -429,29 +445,29 @@ export default class Mousetrap {
             // if this is not a keypress event then we should
             // be smart about using shift keys
             // this will only work for US keyboards however
-            if (action && action !== 'keypress' && Mousetrap._SHIFT_MAP[key]) {
+            if (action && action !== "keypress" && Mousetrap._SHIFT_MAP[key]) {
                 key = Mousetrap._SHIFT_MAP[key];
-                modifiers.push('shift');
+                modifiers.push("shift");
             }
 
-                // if this key is a modifier then add it to the list of modifiers
+            // if this key is a modifier then add it to the list of modifiers
             if (Mousetrap._isModifier(key)) {
                 modifiers.push(key);
             }
         }
 
-            // depending on what the key combination is
-            // we will try to pick the best event for it
+        // depending on what the key combination is
+        // we will try to pick the best event for it
         action = Mousetrap._pickBestAction(key, modifiers, action);
 
         return {
             key,
             modifiers,
-            action
+            action,
         };
     }
 
-    private static _belongsTo (element: Node, ancestor: Node): boolean {
+    private static _belongsTo(element: Node, ancestor: Node): boolean {
         if (element === null || element === window.document) {
             return false;
         }
@@ -462,7 +478,6 @@ export default class Mousetrap {
 
         return Mousetrap._belongsTo(element.parentNode, ancestor);
     }
-
 
     /* ------------------------- NON STATIC ---------------------------- */
 
@@ -493,7 +508,7 @@ export default class Mousetrap {
     private _ignoreNextKeyup: boolean | string = false;
     /**
      * temporary state where we will ignore the next keypress
-    */
+     */
     private _ignoreNextKeypress: boolean = false;
     /**
      * are we currently inside of a sequence?
@@ -506,23 +521,50 @@ export default class Mousetrap {
      */
     public destroy: Function;
 
-    constructor (targetElement: HTMLElement, useCapture?: boolean) {
-        this.target = targetElement || window.document as HTMLDocument;
+    constructor(targetElement: HTMLElement, useCapture?: boolean) {
+        this.target = targetElement || (window.document as HTMLDocument);
         // Some keys is mapped programatically
         Mousetrap._mapSpecialKeys();
 
         const scopepHandleKeyEvent = (e) => this._handleKeyEvent(e);
 
         // Bind events
-        Mousetrap._addEvent(targetElement, 'keypress', scopepHandleKeyEvent, useCapture);
-        Mousetrap._addEvent(targetElement, 'keydown', scopepHandleKeyEvent, useCapture);
-        Mousetrap._addEvent(targetElement, 'keyup', scopepHandleKeyEvent, useCapture);
+        Mousetrap._addEvent(
+            targetElement,
+            "keypress",
+            scopepHandleKeyEvent,
+            useCapture
+        );
+        Mousetrap._addEvent(
+            targetElement,
+            "keydown",
+            scopepHandleKeyEvent,
+            useCapture
+        );
+        Mousetrap._addEvent(
+            targetElement,
+            "keyup",
+            scopepHandleKeyEvent,
+            useCapture
+        );
 
         // Unbind events and reset callbacks
         this.destroy = () => {
-            Mousetrap._removeEvent(targetElement, 'keypress', scopepHandleKeyEvent);
-            Mousetrap._removeEvent(targetElement, 'keydown', scopepHandleKeyEvent);
-            Mousetrap._removeEvent(targetElement, 'keyup', scopepHandleKeyEvent);
+            Mousetrap._removeEvent(
+                targetElement,
+                "keypress",
+                scopepHandleKeyEvent
+            );
+            Mousetrap._removeEvent(
+                targetElement,
+                "keydown",
+                scopepHandleKeyEvent
+            );
+            Mousetrap._removeEvent(
+                targetElement,
+                "keyup",
+                scopepHandleKeyEvent
+            );
             this.reset();
         };
     }
@@ -533,7 +575,7 @@ export default class Mousetrap {
      * @param {Object} doNotReset
      * @returns void
      */
-    private _resetSequences (doNotReset: NumberMap = {}): void {
+    private _resetSequences(doNotReset: NumberMap = {}): void {
         let activeSequences: boolean = false;
 
         for (const key in this._sequenceLevels) {
@@ -549,10 +591,17 @@ export default class Mousetrap {
         }
     }
 
-        /**
-         * finds all callbacks that match based on the keycode, modifiers,
-         */
-    private _getMatches (character: string, modifiers: Modifiers, e: KeyboardEvent | SimpleEvent, sequenceName?: string, combination?: string, level?: number): Callback[] {
+    /**
+     * finds all callbacks that match based on the keycode, modifiers,
+     */
+    private _getMatches(
+        character: string,
+        modifiers: Modifiers,
+        e: KeyboardEvent | SimpleEvent,
+        sequenceName?: string,
+        combination?: string,
+        level?: number
+    ): Callback[] {
         let i;
         let callback;
         const matches: Callback[] = [];
@@ -564,7 +613,7 @@ export default class Mousetrap {
         }
 
         // if a modifier key is coming up on its own we should allow it
-        if (action === 'keyup' && Mousetrap._isModifier(character)) {
+        if (action === "keyup" && Mousetrap._isModifier(character)) {
             modifiers = [character];
         }
 
@@ -575,7 +624,11 @@ export default class Mousetrap {
 
             // if a sequence name is not specified, but this is a sequence at
             // the wrong level then move onto the next match
-            if (!sequenceName && callback.seq && this._sequenceLevels[callback.seq] !== callback.level) {
+            if (
+                !sequenceName &&
+                callback.seq &&
+                this._sequenceLevels[callback.seq] !== callback.level
+            ) {
                 continue;
             }
 
@@ -592,15 +645,21 @@ export default class Mousetrap {
             // chrome will not fire a keypress if meta or control is down
             // safari will fire a keypress if meta or meta+shift is down
             // firefox will fire a keypress if meta or control is down
-            if ((action === 'keypress' && !e.metaKey && !e.ctrlKey) || Mousetrap._modifiersMatch(modifiers, callback.modifiers)) {
-
+            if (
+                (action === "keypress" && !e.metaKey && !e.ctrlKey) ||
+                Mousetrap._modifiersMatch(modifiers, callback.modifiers)
+            ) {
                 // when you bind a combination or sequence a second time it
                 // should overwrite the first one.  if a sequenceName or
                 // combination is specified in this call it does just that
                 //
                 // @todo make deleting its own method?
-                const deleteCombo = !sequenceName && callback.combo === combination;
-                const deleteSequence = sequenceName && callback.seq === sequenceName && callback.level === level;
+                const deleteCombo =
+                    !sequenceName && callback.combo === combination;
+                const deleteSequence =
+                    sequenceName &&
+                    callback.seq === sequenceName &&
+                    callback.level === level;
                 if (deleteCombo || deleteSequence) {
                     this._callbacks[character].splice(i, 1);
                 }
@@ -612,16 +671,24 @@ export default class Mousetrap {
         return matches;
     }
 
-        /**
-         * actually calls the callback function
-         *
-         * if your callback function returns false this will use the jquery
-         * convention - prevent default and stop propogation on the event
-         */
-    private _fireCallback (callback: CallbackFunction, e: KeyboardEvent, combo: string): void {
-
-            // if this event should not happen stop here
-        if (this.stopCallback(e, (e.target as HTMLElement) || (e.srcElement as HTMLElement))) {
+    /**
+     * actually calls the callback function
+     *
+     * if your callback function returns false this will use the jquery
+     * convention - prevent default and stop propogation on the event
+     */
+    private _fireCallback(
+        callback: CallbackFunction,
+        e: KeyboardEvent,
+        combo: string
+    ): void {
+        // if this event should not happen stop here
+        if (
+            this.stopCallback(
+                e,
+                (e.target as HTMLElement) || (e.srcElement as HTMLElement)
+            )
+        ) {
             return;
         }
 
@@ -632,38 +699,40 @@ export default class Mousetrap {
         }
     }
 
-        /**
-         * handles a character key event
-         *
-         * @param {string} character
-         * @param {Array} modifiers
-         * @param {Event} e
-         * @returns void
-         */
-    private _handleKey (character: string, modifiers?: Modifiers, e?: KeyboardEvent): void {
+    /**
+     * handles a character key event
+     *
+     * @param {string} character
+     * @param {Array} modifiers
+     * @param {Event} e
+     * @returns void
+     */
+    private _handleKey(
+        character: string,
+        modifiers?: Modifiers,
+        e?: KeyboardEvent
+    ): void {
         const callbacks = this._getMatches(character, modifiers, e);
         let i: number;
         const doNotReset: NumberMap = {};
         let maxLevel: number = 0;
         let processedSequenceCallback = false;
 
-                // Calculate the maxLevel for sequences so we can only execute the longest callback sequence
+        // Calculate the maxLevel for sequences so we can only execute the longest callback sequence
         for (i = 0; i < callbacks.length; ++i) {
             if (callbacks[i].seq) {
                 maxLevel = Math.max(maxLevel, callbacks[i].level);
             }
         }
 
-                // loop through matching callbacks for this key event
+        // loop through matching callbacks for this key event
         for (i = 0; i < callbacks.length; ++i) {
-
             // fire for all sequence callbacks
             // this is because if for example you have multiple sequences
             // bound such as "g i" and "g t" they both need to fire the
             // callback for matching g cause otherwise you can only ever
             // match the first one
             if (callbacks[i].seq) {
-
                 // only fire callbacks for the maxLevel to prevent
                 // subsequences from also firing
                 //
@@ -678,69 +747,82 @@ export default class Mousetrap {
 
                 processedSequenceCallback = true;
 
-                        // keep a list of which sequences were matches for later
+                // keep a list of which sequences were matches for later
                 doNotReset[callbacks[i].seq] = 1;
-                this._fireCallback(callbacks[i].callback, e, callbacks[i].combo);
+                this._fireCallback(
+                    callbacks[i].callback,
+                    e,
+                    callbacks[i].combo
+                );
                 continue;
             }
 
-                    // if there were no sequence matches but we are still here
-                    // that means this is a regular match so we should fire that
+            // if there were no sequence matches but we are still here
+            // that means this is a regular match so we should fire that
             if (!processedSequenceCallback) {
-                this._fireCallback(callbacks[i].callback, e, callbacks[i].combo);
+                this._fireCallback(
+                    callbacks[i].callback,
+                    e,
+                    callbacks[i].combo
+                );
             }
         }
 
-            // if the key you pressed matches the type of sequence without
-            // being a modifier (ie "keyup" or "keypress") then we should
-            // reset all sequences that were not matched by this event
-            //
-            // this is so, for example, if you have the sequence "h a t" and you
-            // type "h e a r t" it does not match.  in this case the "e" will
-            // cause the sequence to reset
-            //
-            // modifier keys are ignored because you can have a sequence
-            // that contains modifiers such as "enter ctrl+space" and in most
-            // cases the modifier key will be pressed before the next key
-            //
-            // also if you have a sequence such as "ctrl+b a" then pressing the
-            // "b" key will trigger a "keypress" and a "keydown"
-            //
-            // the "keydown" is expected when there is a modifier, but the
-            // "keypress" ends up matching the this._nextExpectedAction since it occurs
-            // after and that causes the sequence to reset
-            //
-            // we ignore keypresses in a sequence that directly follow a keydown
-            // for the same character
-        const ignoreThisKeypress = e.type === 'keypress' && this._ignoreNextKeypress;
-        if (e.type === this._nextExpectedAction && !Mousetrap._isModifier(character) && !ignoreThisKeypress) {
+        // if the key you pressed matches the type of sequence without
+        // being a modifier (ie "keyup" or "keypress") then we should
+        // reset all sequences that were not matched by this event
+        //
+        // this is so, for example, if you have the sequence "h a t" and you
+        // type "h e a r t" it does not match.  in this case the "e" will
+        // cause the sequence to reset
+        //
+        // modifier keys are ignored because you can have a sequence
+        // that contains modifiers such as "enter ctrl+space" and in most
+        // cases the modifier key will be pressed before the next key
+        //
+        // also if you have a sequence such as "ctrl+b a" then pressing the
+        // "b" key will trigger a "keypress" and a "keydown"
+        //
+        // the "keydown" is expected when there is a modifier, but the
+        // "keypress" ends up matching the this._nextExpectedAction since it occurs
+        // after and that causes the sequence to reset
+        //
+        // we ignore keypresses in a sequence that directly follow a keydown
+        // for the same character
+        const ignoreThisKeypress =
+            e.type === "keypress" && this._ignoreNextKeypress;
+        if (
+            e.type === this._nextExpectedAction &&
+            !Mousetrap._isModifier(character) &&
+            !ignoreThisKeypress
+        ) {
             this._resetSequences(doNotReset);
         }
 
-        this._ignoreNextKeypress = processedSequenceCallback && e.type === 'keydown';
+        this._ignoreNextKeypress =
+            processedSequenceCallback && e.type === "keydown";
     }
 
-        /**
-         * handles a keydown event
-         */
-    private _handleKeyEvent (e: KeyboardEvent): void {
-
+    /**
+     * handles a keydown event
+     */
+    private _handleKeyEvent(e: KeyboardEvent): void {
         // normalize e.which for key events
         // @see http://stackoverflow.com/questions/4285627/javascript-keycode-vs-charcode-utter-confusion
-        if (typeof e.which !== 'number') {
+        if (typeof e.which !== "number") {
             //e.which is read-only. Cast as any to ignore.
             (e.which as any) = e.keyCode;
         }
 
         const character = Mousetrap._characterFromEvent(e);
 
-            // no character found then stop
+        // no character found then stop
         if (!character) {
             return;
         }
 
-            // need to use === for the character check because the character can be 0
-        if (e.type === 'keyup' && this._ignoreNextKeyup === character) {
+        // need to use === for the character check because the character can be 0
+        if (e.type === "keyup" && this._ignoreNextKeyup === character) {
             this._ignoreNextKeyup = false;
             return;
         }
@@ -748,30 +830,34 @@ export default class Mousetrap {
         this._handleKey(character, Mousetrap._eventModifiers(e), e);
     }
 
-        /**
-         * called to set a 1 second timeout on the specified sequence
-         *
-         * this is so after each key press in the sequence you have 1 second
-         * to press the next key before you have to start over
-         */
-    private _resetSequenceTimer (): void {
+    /**
+     * called to set a 1 second timeout on the specified sequence
+     *
+     * this is so after each key press in the sequence you have 1 second
+     * to press the next key before you have to start over
+     */
+    private _resetSequenceTimer(): void {
         clearTimeout(this._resetTimer);
         this._resetTimer = window.setTimeout(this._resetSequences, 1000);
     }
 
-        /**
-         * binds a key sequence to an event
-         */
-    private _bindSequence (combo: string, keys: string[], callback: CallbackFunction, action: string): void {
-
-            // start off by adding a sequence level record for this combination
-            // and setting the level to 0
+    /**
+     * binds a key sequence to an event
+     */
+    private _bindSequence(
+        combo: string,
+        keys: string[],
+        callback: CallbackFunction,
+        action: string
+    ): void {
+        // start off by adding a sequence level record for this combination
+        // and setting the level to 0
         this._sequenceLevels[combo] = 0;
 
-            /**
-             * callback to increase the sequence level for this sequence and reset
-             * all other sequences that were active
-             */
+        /**
+         * callback to increase the sequence level for this sequence and reset
+         * all other sequences that were active
+         */
         const _increaseSequence = (nextAction: string): CallbackFunction => {
             return (): boolean => {
                 this._nextExpectedAction = nextAction;
@@ -791,12 +877,12 @@ export default class Mousetrap {
             // we should ignore the next key up if the action is key down
             // or keypress.  this is so if you finish a sequence and
             // release the key the final key will not trigger a keyup
-            if (action !== 'keyup') {
+            if (action !== "keyup") {
                 this._ignoreNextKeyup = Mousetrap._characterFromEvent(e);
             }
 
-                // weird race condition if a sequence ends with the key
-                // another sequence begins with
+            // weird race condition if a sequence ends with the key
+            // another sequence begins with
             window.setTimeout(this._resetSequences, 10);
 
             return;
@@ -813,7 +899,11 @@ export default class Mousetrap {
         // ones are better suited to the key provided
         for (let i = 0; i < keys.length; ++i) {
             const isFinal = i + 1 === keys.length;
-            const wrappedCallback: CallbackFunction = isFinal ? _callbackAndReset : _increaseSequence(action || Mousetrap._getKeyInfo(keys[i + 1]).action);
+            const wrappedCallback: CallbackFunction = isFinal
+                ? _callbackAndReset
+                : _increaseSequence(
+                      action || Mousetrap._getKeyInfo(keys[i + 1]).action
+                  );
             this._bindSingle(keys[i], wrappedCallback, action, combo, i);
         }
     }
@@ -821,15 +911,20 @@ export default class Mousetrap {
     /**
      * binds a single keyboard combination
      */
-    private _bindSingle (combination: string, callback: CallbackFunction, action: string, sequenceName?: string, level?: number): void {
-
+    private _bindSingle(
+        combination: string,
+        callback: CallbackFunction,
+        action: string,
+        sequenceName?: string,
+        level?: number
+    ): void {
         // store a direct mapped reference for use with Mousetrap.trigger
-        this._directMap[combination + ':' + action] = callback;
+        this._directMap[combination + ":" + action] = callback;
 
         // make sure multiple spaces in a row become a single space
-        combination = combination.replace(/\s+/g, ' ');
+        combination = combination.replace(/\s+/g, " ");
 
-        const sequence = combination.split(' ');
+        const sequence = combination.split(" ");
         let info: KeyInfo;
 
         // if this pattern is a sequence of keys then run through this method
@@ -846,7 +941,14 @@ export default class Mousetrap {
         this._callbacks[info.key] = this._callbacks[info.key] || [];
 
         // remove an existing match if there is one
-        this._getMatches(info.key, info.modifiers, { type: info.action }, sequenceName, combination, level);
+        this._getMatches(
+            info.key,
+            info.modifiers,
+            { type: info.action },
+            sequenceName,
+            combination,
+            level
+        );
 
         // add this call back to the array
         // if it is a sequence put it at the beginning
@@ -854,25 +956,28 @@ export default class Mousetrap {
         //
         // this is important because the way these are processed expects
         // the sequence ones to come first
-        this._callbacks[info.key][sequenceName ? 'unshift' : 'push']({
+        this._callbacks[info.key][sequenceName ? "unshift" : "push"]({
             callback,
             modifiers: info.modifiers,
             action: info.action,
             seq: sequenceName,
             level,
-            combo: combination
+            combo: combination,
         });
     }
 
     /**
      * binds multiple combinations to the same callback
      */
-    private _bindMultiple (combinations: string | string[], callback: CallbackFunction, action?: string): void {
+    private _bindMultiple(
+        combinations: string | string[],
+        callback: CallbackFunction,
+        action?: string
+    ): void {
         for (let i = 0; i < combinations.length; ++i) {
             this._bindSingle(combinations[i], callback, action);
         }
     }
-
 
     /**
      * binds an event to mousetrap
@@ -883,7 +988,11 @@ export default class Mousetrap {
      * be sure to list the modifier keys first to make sure that the
      * correct key ends up getting bound (the last key in the pattern)
      */
-    public bind (keys: KeyBindings | string | string[], callback: CallbackFunction, action: string): void {
+    public bind(
+        keys: KeyBindings | string | string[],
+        callback: CallbackFunction,
+        action: string
+    ): void {
         keys = Array.isArray(keys) ? keys : [keys];
         this._bindMultiple(keys, callback, action);
     }
@@ -901,7 +1010,7 @@ export default class Mousetrap {
      * the keycombo+action has to be exactly the same as
      * it was defined in the bind method
      */
-    public unbind (keys: KeyBindings | string | string[], action: string): void {
+    public unbind(keys: KeyBindings | string | string[], action: string): void {
         const emptyFunc = (): boolean => {
             return;
         };
@@ -912,9 +1021,9 @@ export default class Mousetrap {
     /**
      * triggers an event that has already been bound
      */
-    public trigger (keys: string, action: string): void {
-        if (this._directMap[keys + ':' + action]) {
-            (this._directMap[keys + ':' + action] as Function)({}, keys);
+    public trigger(keys: string, action: string): void {
+        if (this._directMap[keys + ":" + action]) {
+            (this._directMap[keys + ":" + action] as Function)({}, keys);
         }
     }
 
@@ -923,7 +1032,7 @@ export default class Mousetrap {
      * if you want to clear out the current keyboard shortcuts and bind
      * new ones - for example if you switch to another page
      */
-    public reset (): void {
+    public reset(): void {
         this._callbacks = {};
         this._directMap = {};
     }
@@ -931,10 +1040,9 @@ export default class Mousetrap {
     /**
      * should we stop this event before firing off callbacks
      */
-    public stopCallback (e: KeyboardEvent, element: HTMLElement): boolean {
-
+    public stopCallback(e: KeyboardEvent, element: HTMLElement): boolean {
         // if the element has the class "mousetrap" then no need to stop
-        if ((' ' + element.className + ' ').indexOf(' mousetrap ') > -1) {
+        if ((" " + element.className + " ").indexOf(" mousetrap ") > -1) {
             return false;
         }
 
@@ -943,13 +1051,18 @@ export default class Mousetrap {
         }
 
         // stop for input, select, and textarea
-        return element.tagName === 'INPUT' || element.tagName === 'SELECT' || element.tagName === 'TEXTAREA' || element.isContentEditable;
+        return (
+            element.tagName === "INPUT" ||
+            element.tagName === "SELECT" ||
+            element.tagName === "TEXTAREA" ||
+            element.isContentEditable
+        );
     }
 
     /**
      * exposes _handleKey publicly so it can be overwritten by extensions
      */
-    public handleKey (): void {
+    public handleKey(): void {
         return this._handleKey(arguments as any);
     }
 
@@ -963,5 +1076,5 @@ export default class Mousetrap {
             }
         }
         Mousetrap._REVERSE_MAP = null;
-    }
+    };
 }

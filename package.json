@@ -20,16 +20,13 @@
     "build:sourcemaps": "cross-env USE_SOURCEMAPS=true npm run build",
     "build": "npm run clean && npm run build:prod",
     "dev": "npm run build:dev:watch",
-    "lint:ts": "tslint -t codeFrame 'src/**/*.ts'",
-    "lint:ts:fix": "tslint --fix -t codeFrame 'src/**/*.ts'",
-    "lint": "npm run lint:ts",
     "compile": "npm run clean:cache && tsc",
     "clean": "npm run clean:dist && npm run clean:cache",
     "clean:dist": "rimraf -- dist",
     "clean:cache": "rimraf -- .tmp",
     "webpack": "ts-node --max_old_space_size=8192 node_modules/webpack/bin/webpack.js",
     "webpack:debug": "ts-node --inspect --debug-brk --max_old_space_size=8192 node_modules/webpack/bin/webpack.js",
-    "precommit": "npm run lint",
+    "precommit": "",
     "prepush": "npm run build"
   },
   "devDependencies": {
@@ -52,6 +49,5 @@
     "uglifyjs-webpack-plugin": "^1.1.8",
     "webpack": "3.11.0",
     "webpack-merge": "4.1.1"
-  },
-  "dependencies": {}
+  }
 }
