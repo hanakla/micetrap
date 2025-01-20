@@ -66,6 +66,11 @@ type KeyInfo = {
     action: ActionPhase;
 };
 
+type BindOption = {
+    action?: ActionPhase;
+    signal?: AbortSignal;
+};
+
 type ActionPhase = "keyup" | "keydown" | "keypress";
 
 export type CallbackFunction = (
@@ -228,36 +233,12 @@ export class Mousetrap {
         object: HTMLElement | HTMLDocument,
         type: string,
         callback: (e: KeyboardEvent) => void,
-        useCapture?: boolean
+        options: AddEventListenerOptions
     ): void {
         if (object.addEventListener) {
-            object.addEventListener(type, callback, useCapture || false);
+            object.addEventListener(type, callback, options);
             return;
         }
-        // IE-specific attachEvent is no longer available
-        (object as any).attachEvent("on" + type, callback);
-    }
-
-    /**
-     * cross browser remove event method
-     *
-     * @param {Element|HTMLDocument} object
-     * @param {string} type
-     * @param {Function} callback
-     * @returns void
-     */
-    private static _removeEvent(
-        object: HTMLElement | HTMLDocument,
-        type: string,
-        callback: (e: KeyboardEvent) => void
-    ) {
-        if (object.removeEventListener) {
-            object.removeEventListener(type, callback, false);
-            return;
-        }
-
-        // IE-specific attachEvent is no longer available
-        (object as any).detachEvent("on" + type, callback);
     }
 
     /**
@@ -334,30 +315,6 @@ export class Mousetrap {
         }
 
         return modifiers;
-    }
-
-    /**
-     * prevents default for this event
-     */
-    private static _preventDefault(e: Event): void {
-        if (e.preventDefault) {
-            e.preventDefault();
-            return;
-        }
-
-        e.returnValue = false;
-    }
-
-    /**
-     * stops propogation for this event
-     */
-    private static _stopPropagation(e: Event): void {
-        if (e.stopPropagation) {
-            e.stopPropagation();
-            return;
-        }
-
-        e.cancelBubble = true;
     }
 
     /**
@@ -489,6 +446,31 @@ export class Mousetrap {
         return Mousetrap._belongsTo(element.parentNode, ancestor);
     }
 
+    private static _instance: Mousetrap;
+
+    private static get instance() {
+        return (Mousetrap._instance ??= new Mousetrap(window.document));
+    }
+
+    public static bind(
+        keys: KeyBindings | string | string[],
+        callback: CallbackFunction,
+        option?: BindOption
+    ): void {
+        Mousetrap.instance.bind(keys, callback, option);
+    }
+
+    public static unbind(
+        keys: KeyBindings | string | string[],
+        action?: ActionPhase
+    ): void {
+        Mousetrap.instance.unbind(keys, action);
+    }
+
+    public static trigger(keys: string, action?: ActionPhase): void {
+        Mousetrap.instance.trigger(keys, action);
+    }
+
     /* ------------------------- NON STATIC ---------------------------- */
 
     /**
@@ -526,57 +508,32 @@ export class Mousetrap {
      */
     private _nextExpectedAction: boolean | ActionPhase = false;
 
-    /**
-     * Method to remove all listerners for a target element
-     */
-    public destroy: Function;
+    private abortController: AbortController = new AbortController();
 
-    constructor(targetElement: HTMLElement, useCapture?: boolean) {
-        this.target = targetElement || (window.document as HTMLDocument);
+    constructor(
+        target: HTMLElement | Document,
+        options: AddEventListenerOptions = {}
+    ) {
+        this.target = target || (window.document as HTMLDocument);
+
         // Some keys is mapped programatically
         Mousetrap._mapSpecialKeys();
 
-        const scopepHandleKeyEvent = (e) => this._handleKeyEvent(e);
+        const signal = AbortSignal.any(
+            [this.abortController.signal].concat(
+                options.signal ? [options.signal] : []
+            )
+        );
+
+        const option: AddEventListenerOptions = {
+            capture: options.capture,
+            signal,
+        };
 
         // Bind events
-        Mousetrap._addEvent(
-            targetElement,
-            "keypress",
-            scopepHandleKeyEvent,
-            useCapture
-        );
-        Mousetrap._addEvent(
-            targetElement,
-            "keydown",
-            scopepHandleKeyEvent,
-            useCapture
-        );
-        Mousetrap._addEvent(
-            targetElement,
-            "keyup",
-            scopepHandleKeyEvent,
-            useCapture
-        );
-
-        // Unbind events and reset callbacks
-        this.destroy = () => {
-            Mousetrap._removeEvent(
-                targetElement,
-                "keypress",
-                scopepHandleKeyEvent
-            );
-            Mousetrap._removeEvent(
-                targetElement,
-                "keydown",
-                scopepHandleKeyEvent
-            );
-            Mousetrap._removeEvent(
-                targetElement,
-                "keyup",
-                scopepHandleKeyEvent
-            );
-            this.reset();
-        };
+        target.addEventListener("keypress", this._handleKeyEvent, option);
+        target.addEventListener("keydown", this._handleKeyEvent, option);
+        target.addEventListener("keyup", this._handleKeyEvent, option);
     }
 
     /**
@@ -612,8 +569,7 @@ export class Mousetrap {
         combination?: string,
         level?: number
     ): Callback[] {
-        let i;
-        let callback;
+        let callback: Callback;
         const matches: Callback[] = [];
         const action = e.type;
 
@@ -629,7 +585,7 @@ export class Mousetrap {
 
         // loop through all callbacks for the key that was pressed
         // and see if any of them match
-        for (i = 0; i < this._callbacks[character].length; ++i) {
+        for (let i = 0; i < this._callbacks[character].length; ++i) {
             callback = this._callbacks[character][i];
 
             // if a sequence name is not specified, but this is a sequence at
@@ -693,19 +649,14 @@ export class Mousetrap {
         combo: string
     ): void {
         // if this event should not happen stop here
-        if (
-            this.stopCallback(
-                e,
-                (e.target as HTMLElement) || (e.srcElement as HTMLElement)
-            )
-        ) {
+        if (this.stopCallback(e, e.target as HTMLElement)) {
             return;
         }
 
         // Why assume callback return something?
         if (callback(e, combo) === false) {
-            Mousetrap._preventDefault(e);
-            Mousetrap._stopPropagation(e);
+            e.preventDefault();
+            e.stopPropagation();
         }
     }
 
@@ -723,6 +674,7 @@ export class Mousetrap {
         e: KeyboardEvent
     ): void {
         const callbacks = this._getMatches(character, modifiers, e);
+
         let i: number;
         const doNotReset: NumberMap = {};
         let maxLevel: number = 0;
@@ -817,7 +769,7 @@ export class Mousetrap {
     /**
      * handles a keydown event
      */
-    private _handleKeyEvent(e: KeyboardEvent): void {
+    private _handleKeyEvent = (e: KeyboardEvent): void => {
         // normalize e.which for key events
         // @see http://stackoverflow.com/questions/4285627/javascript-keycode-vs-charcode-utter-confusion
         if (typeof e.which !== "number") {
@@ -839,7 +791,7 @@ export class Mousetrap {
         }
 
         this._handleKey(character, Mousetrap._eventModifiers(e), e);
-    }
+    };
 
     /**
      * called to set a 1 second timeout on the specified sequence
@@ -859,7 +811,7 @@ export class Mousetrap {
         combo: string,
         keys: string[],
         callback: CallbackFunction,
-        action?: ActionPhase
+        { action, signal }: BindOption = {}
     ): void {
         // start off by adding a sequence level record for this combination
         // and setting the level to 0
@@ -917,7 +869,13 @@ export class Mousetrap {
                 : _increaseSequence(
                       action || Mousetrap._getKeyInfo(keys[i + 1]).action
                   );
-            this._bindSingle(keys[i], wrappedCallback, action, combo, i);
+            this._bindSingle(
+                keys[i],
+                wrappedCallback,
+                { action, signal },
+                combo,
+                i
+            );
         }
     }
 
@@ -927,12 +885,12 @@ export class Mousetrap {
     private _bindSingle(
         combination: string,
         callback: CallbackFunction,
-        action?: ActionPhase,
+        option: BindOption = {},
         sequenceName?: string,
         level?: number
     ): void {
         // store a direct mapped reference for use with Mousetrap.trigger
-        this._directMap[combination + ":" + action] = callback;
+        this._directMap[combination + ":" + option.action] = callback;
 
         // make sure multiple spaces in a row become a single space
         combination = combination.replace(/\s+/g, " ");
@@ -943,15 +901,15 @@ export class Mousetrap {
         // if this pattern is a sequence of keys then run through this method
         // to reprocess each pattern one key at a time
         if (sequence.length > 1) {
-            this._bindSequence(combination, sequence, callback, action);
+            this._bindSequence(combination, sequence, callback, option);
             return;
         }
 
-        info = Mousetrap._getKeyInfo(combination, action);
+        info = Mousetrap._getKeyInfo(combination, option.action);
 
         // make sure to initialize array if this is the first time
         // a callback is added for this key
-        this._callbacks[info.key] = this._callbacks[info.key] || [];
+        this._callbacks[info.key] ??= [];
 
         // remove an existing match if there is one
         this._getMatches(
@@ -980,19 +938,6 @@ export class Mousetrap {
     }
 
     /**
-     * binds multiple combinations to the same callback
-     */
-    private _bindMultiple(
-        combinations: string | string[],
-        callback: CallbackFunction,
-        action?: ActionPhase
-    ): void {
-        for (let i = 0; i < combinations.length; ++i) {
-            this._bindSingle(combinations[i], callback, action);
-        }
-    }
-
-    /**
      * binds an event to mousetrap
      *
      * can be a single key, a combination of keys separated with +,
@@ -1004,10 +949,19 @@ export class Mousetrap {
     public bind(
         keys: KeyBindings | string | string[],
         callback: CallbackFunction,
-        action?: ActionPhase
-    ): void {
+        option?: BindOption
+    ): Mousetrap {
         keys = Array.isArray(keys) ? keys : [keys];
-        this._bindMultiple(keys, callback, action);
+
+        option?.signal?.addEventListener("abort", () => {
+            this.unbind(keys, option?.action);
+        });
+
+        for (const key of keys) {
+            this._bindSingle(key, callback, option);
+        }
+
+        return this;
     }
 
     /**
@@ -1026,18 +980,23 @@ export class Mousetrap {
     public unbind(
         keys: KeyBindings | string | string[],
         action?: ActionPhase
-    ): void {
+    ): Mousetrap {
         const emptyFunc = () => {};
-        this.bind(keys, emptyFunc, action);
+        this.bind(keys, emptyFunc, { action });
+        return this;
     }
 
     /**
      * triggers an event that has already been bound
      */
-    public trigger(keys: string, action: string): void {
+    public trigger(keys: string, action?: ActionPhase): Mousetrap {
         if (this._directMap[keys + ":" + action]) {
-            (this._directMap[keys + ":" + action] as Function)({}, keys);
+            (this._directMap[keys + ":" + action] as CallbackFunction)(
+                new KeyboardEvent("keydown"),
+                keys
+            );
         }
+        return this;
     }
 
     /**
@@ -1045,9 +1004,10 @@ export class Mousetrap {
      * if you want to clear out the current keyboard shortcuts and bind
      * new ones - for example if you switch to another page
      */
-    public reset(): void {
+    public reset(): Mousetrap {
         this._callbacks = {};
         this._directMap = {};
+        return this;
     }
 
     /**
@@ -1083,4 +1043,12 @@ export class Mousetrap {
         }
         Mousetrap._REVERSE_MAP = null;
     };
+
+    /**
+     * Method to remove all listerners for a target element
+     */
+    public destroy() {
+        this.abortController.abort();
+        this.reset();
+    }
 }
