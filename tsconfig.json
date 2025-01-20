@@ -11,7 +11,7 @@
         "noEmitHelpers": true,
         "noEmitOnError": true,
         "importHelpers": true,
-        "strictNullChecks": false,
+        "strictNullChecks": true,
         "pretty": true,
         "sourceMap": true,
         "declaration": true,
