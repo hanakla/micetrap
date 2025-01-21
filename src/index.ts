@@ -445,6 +445,13 @@ export class Mousetrap {
         Mousetrap.instance.bind(keys, callback, option);
     }
 
+    public static bindMap(
+        map: { [key: string]: CallbackFunction },
+        option?: BindOption
+    ): void {
+        Mousetrap.instance.bindMap(map, option);
+    }
+
     public static unbind(
         keys: KeyBindings | string | string[],
         action?: ActionPhase
@@ -946,6 +953,28 @@ export class Mousetrap {
             this._bindSingle(key, callback, option);
         }
 
+        return this;
+    }
+
+    /**
+     * object to bind multiple key events in a single call
+     *
+     * You can pass it in like:
+     *
+     * Mousetrap.bind({
+     *     'a': () => { console.log('a'); },
+     *     'b': () => { console.log('b'); }
+     * });
+     *
+     * And can optionally pass options as a second argument
+     */
+    public bindMap(
+        map: { [key: string]: CallbackFunction },
+        option?: BindOption
+    ): Mousetrap {
+        for (const key in map) {
+            this.bind(key, map[key], option);
+        }
         return this;
     }
 
