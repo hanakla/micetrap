@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
+    "target": "ES2022",
+    "module": "ES2022",
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
@@ -11,41 +11,20 @@
     "noEmitHelpers": true,
     "noEmitOnError": true,
     "importHelpers": true,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
     "pretty": true,
     "sourceMap": true,
     "declaration": true,
     "declarationDir": "dist/declaration",
     "outDir": ".tmp/code",
-    "lib": [
-      "dom",
-      "es6"
-    ],
-    "typeRoots": [
-      "node_modules/@types"
-    ]
+    "lib": ["dom", "es6"],
+    "types": ["vitest/globals", "vitest/importMeta"],
+    "jsx": "react-jsx",
+    "paths": {
+      "micetrap": ["./"]
+    }
   },
-  "include": [
-    "src/**/*.ts",
-    "config/**/*.ts",
-    "typings/global.d.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    ".tmp"
-  ],
+  "exclude": ["node_modules", "dist", ".tmp"],
   "compileOnSave": false,
-  "buildOnSave": false,
-  "awesomeTypescriptLoaderOptions": {
-    "useCache": true,
-    "cacheDirectory": ".tmp/awcache",
-    "forceIsolatedModules": true,
-    "files": [
-        "src/**/index.ts"
-    ],
-    "reportFiles": [
-        "src/**/*.ts"
-    ]
-  }
+  "buildOnSave": false
 }

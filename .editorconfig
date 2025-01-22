@@ -1,9 +1,6 @@
-# http://editorconfig.org
-root = true
-
-[*]
+[*.{ts,tsx,css,md}]
 indent_style = space
-indent_size = 4
+indent_size = 2
 end_of_line = lf
 charset = utf-8
 trim_trailing_whitespace = true
@@ -12,8 +9,3 @@ insert_final_newline = true
 [*.md]
 trim_trailing_whitespace = false
 
-# The indent size used in the `package.json` file cannot be changed
-# https://github.com/npm/npm/pull/3180#issuecomment-16336516
-[{npm-shrinkwrap.json,package.json}]
-indent_style = space
-indent_size = 2
