@@ -1,13 +1,10 @@
-Mousetrap is a simple library for handling keyboard shortcuts in Javascript.
+`@hanakla/micetrap` is a simple library for handling keyboard shortcuts in TypeScript.  
+Based on [Mousetrap](https://github.com/ccampbell/mousetrap) and [mousetrap-ts](https://github.com/JonWallsten/mousetrap-ts)
 
 It is licensed under the Apache 2.0 license.
 
-It is around **2kb** minified and gzipped and **4.5kb** minified, has no external dependencies, and has been tested in the following browsers:
-
-- Internet Explorer 6+
-- Safari
-- Firefox
-- Chrome
+It is around
+![minified gzipped size](https://img.shields.io/bundlephobia/minzip/@hanakla/micetrap?style=flat-square) and ![minified size](https://img.shields.io/bundlephobia/min/@hanakla/micetrap?style=flat-square), has no external dependencies.
 
 It has support for `keypress`, `keydown`, and `keyup` events on specific keys, keyboard combinations, or key sequences.
 
@@ -18,7 +15,7 @@ It has support for `keypress`, `keydown`, and `keyup` events on specific keys, k
     install `micetrap` from `npm` and import it
 
     ```ts
-    import { micetrap } from "micetrap";
+    import { micetrap } from "@hanakla/micetrap";
     ```
 
 2.  Add some keyboard events to listen for
@@ -65,6 +62,31 @@ It has support for `keypress`, `keydown`, and `keyup` events on specific keys, k
     ]);
     ```
 
+### React hooks
+
+Micetrap provides React hooks that can be imported from a separate bundle, `@hanakla/micetrap/react`. This allows you to easily set up key event handlers at both the element and document levels. The modular approach ensures that you only load the necessary features, keeping your application lightweight and efficient.
+
+```tsx
+import { useDocumentMicetrap, useMicetrap } from "@hanakla/micetrap/react";
+
+function App() {
+  // Element-level Micetrap: Attach key handlers to a specific element.
+  // Handlers are automatically wrapped with `useEffectCallback`,
+  // so you don't need to manually use `useCallback`.
+  const ref = useMiceTrap([
+    { keys: "4", handler: () => console.log("Key '4' pressed") },
+    { keys: "?", handler: () => console.log("Show shortcuts!") },
+  ]);
+
+  // Document-level Micetrap: Attach key handlers globally to the document.
+  useDocumentMicetrap([
+    { keys: "esc", handler: () => console.log("Escape key pressed") },
+  ]);
+
+  return <div ref={ref}>Your App</div>;
+}
+```
+
 ## Why Mousetrap?
 
 There are a number of other similar libraries out there so what makes this one different?
@@ -77,7 +99,3 @@ There are a number of other similar libraries out there so what makes this one d
 - You can programatically trigger key events with the `trigger()` method
 - It works with the numeric keypad on your keyboard
 - The code is well documented/commented
-
-## Documentation
-
-Full documentation can be found at https://craig.is/killing/mice
