@@ -13,80 +13,56 @@ It has support for `keypress`, `keydown`, and `keyup` events on specific keys, k
 
 ## Getting started
 
-1.  Install mousetrap-ts
+1.  Install micetrap
 
-    install `mousetrap-ts` from `npm` and import it
+    install `micetrap` from `npm` and import it
 
     ```ts
-    import Mousetrap from "mousetrap-ts";
+    import { micetrap } from "micetrap";
     ```
 
 2.  Add some keyboard events to listen for
 
-    ```html
-    <script>
-        // single keys
-        Mousetrap.bind("4", () => {
-            console.log("4");
-        });
-        Mousetrap.bind("?", () => {
-            console.log("show shortcuts!");
-        });
-        Mousetrap.bind(
-            "esc",
-            () => {
-                console.log("escape");
-            },
-            "keyup"
-        );
+    ```typescript
+    // single keys
+    micetrap([
+        { keys: "4", handler: () => console.log("4") },
+        { keys: "?", handler: () => console.log("show shortcuts!") },
+    ]);
 
-        // combinations (ctrl+shift+k or command+shift+k by platform)
-        Mousetrap.bind("meta+shift+k", () => {
-            console.log("command shift k");
-        });
+    micetrap([{ keys: "esc", handler: () => console.log("escape") }], {
+        action: "keyup",
+    });
+
+    // combinations (ctrl+shift+k or command+shift+k by platform)
+    micetrap([
+        { keys: ["meta+shift+k"], handler: () => console.log("meta shift k") },
 
         // map multiple combinations to the same callback
-        Mousetrap.bind(["command+k", "ctrl+k"], () => {
-            console.log("command k or control k");
+        {
+            keys: ["command+k", "ctrl+k"],
+            handler: () => {
+                console.log("command k or control k");
 
-            // return false to prevent default browser behavior and stop event from bubbling
+                // return false to prevent default browser behavior and stop event from bubbling
+                return false;
+            },
+        },
+    ]);
 
-            return false;
-        });
+    // gmail style sequences
+    micetrap([
+        { keys: "g i", handler: () => console.log("go to inbox") },
+        { keys: "* a", handler: () => console.log("select all") },
+    ]);
 
-        // gmail style sequences
-        Mousetrap.bind("g i", () => {
-            console.log("go to inbox");
-        });
-        Mousetrap.bind("* a", () => {
-            console.log("select all");
-        });
-
-        // konami code!
-        Mousetrap.bind(
-            "up up down down left right left right b a enter",
-            () => {
-                console.log("konami code");
-            }
-        );
-
-        // Use the KeyBindings Enum - Replace import statement with the following line
-        import Mousetrap, { KeyBindings } from "mousetrap-ts";
-        Mousetrap.bind(KeyBindings.moveDown, () => {
-            console.log("Triggered on arrow down");
-        });
-
-        // Type your callback - Replace import statement with the following line
-        import Mousetrap, { CallbackFunction, KeyBindings } from "mousetrap-ts";
-        const callback: CallbackFunction = (e, combo) => {
-            console.log("Corrects attributes and return value");
-            return false;
-        };
-        Mousetrap.bind(KeyBindings.moveDown, callback);
-
-        // Remove all listeners and reset callbacks
-        Mousetrap.destroy();
-    </script>
+    // konami code!
+    micetrap([
+        {
+            keys: "up up down down left right left right b a enter",
+            handler: () => console.log("konami code!"),
+        },
+    ]);
     ```
 
 ## Why Mousetrap?
