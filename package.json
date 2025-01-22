@@ -1,5 +1,5 @@
 {
-  "name": "micetrap",
+  "name": "@hanakla/micetrap",
   "version": "1.0.0-beta.1",
   "description": "Simple library for handling keyboard shortcuts",
   "main": "dist/index.js",
@@ -32,6 +32,7 @@
     "clean": "npm run clean:dist && npm run clean:cache",
     "clean:dist": "rimraf -- dist",
     "clean:cache": "rimraf -- .tmp",
+    "prepublishOnly": "npm run build",
     "precommit": "",
     "prepush": "npm run build"
   },
