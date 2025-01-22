@@ -10,8 +10,7 @@ export type { MicetrapCallback, ShouldStopCallback };
 
 type MicetrapBind = { keys: string | string[]; callback: MicetrapCallback };
 
-type Micetrap = {
-    hook: MicetrapCallback | null;
+export type Micetrap = {
     getMatches: (
         bindMap: Array<MicetrapBind>,
         e: KeyboardEvent
@@ -44,8 +43,6 @@ export function micetrap(
     const handleKeyEvent = (e: KeyboardEvent) => {
         if (stopCallback(e, e.target as HTMLElement, target)) return;
 
-        ret.hook?.(e);
-
         for (const bind of binds) {
             const match = matchCombo(
                 bind.keys,
@@ -75,7 +72,6 @@ export function micetrap(
     target.addEventListener("keypress", handleKeyEvent, { signal });
 
     const ret: Micetrap = {
-        hook: null,
         getMatches(bindMap: Array<MicetrapBind>, e: KeyboardEvent) {
             return bindMap
                 .map((bind) => {
