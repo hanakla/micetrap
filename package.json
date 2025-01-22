@@ -6,7 +6,7 @@
   "typings": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "git://github.com/hanak1a/mousetrap.git"
+    "url": "git://github.com/hanak1a/micetrap.git"
   },
   "author": "Hanakla <hanakla.dev@gmail.com>",
   "license": "Apache-2.0",
