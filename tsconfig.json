@@ -18,9 +18,12 @@
         "declarationDir": "dist/declaration",
         "outDir": ".tmp/code",
         "lib": ["dom", "es6"],
-        "types": ["vitest/globals", "vitest/importMeta"]
+        "types": ["vitest/globals", "vitest/importMeta"],
+        "jsx": "react-jsx",
+        "paths": {
+            "micetrap": ["./"]
+        }
     },
-    "include": ["src/**/*.ts"],
     "exclude": ["node_modules", "dist", ".tmp"],
     "compileOnSave": false,
     "buildOnSave": false

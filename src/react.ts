@@ -1,67 +1,29 @@
-import {
-    RefObject,
-    useEffect,
-    useLayoutEffect,
-    useMemo,
-    useReducer,
-    useRef,
-} from "react";
-import { Micetrap, MicetrapCallback, micetrap } from "./index";
+import { RefObject, useLayoutEffect, useMemo, useReducer, useRef } from "react";
+import { micetrap, MicetrapOption } from "./index";
+import { MicetrapBind } from "./core";
 
-export function useDocumentMicetrap(
-    binds: { keys: string | string[]; callback: MicetrapCallback }[]
-) {
-    const mice = useRef<Micetrap | null>(null);
+export function useDocumentMicetrap(binds: MicetrapBind[]) {
     const getBinds = useEffectCallback(() => binds);
 
-    const ref = useKeyboardEvents<Document>((e) => {
-        mice.current
-            ?.getMatches(getBinds(), e)
-            .forEach(({ callback, combo }) => callback(e, combo));
-    });
-
     useLayoutEffect(() => {
-        mice.current = micetrap([]);
-        ref.current = document;
-
-        return () => mice.current?.destroy();
+        const mice = micetrap(getBinds, document);
+        return () => mice.destroy();
     }, []);
 }
 
-export function useMicetrap(
-    binds: { keys: string | string[]; callback: MicetrapCallback }[]
+export function useMicetrap<T extends Element>(
+    binds: MicetrapBind[],
+    options?: MicetrapOption
 ) {
-    const ref = useRef<Micetrap | null>(null);
+    const getBinds = useEffectCallback(() => binds);
 
-    useLayoutEffect(() => {
-        ref.current = micetrap(binds);
-        return () => ref.current?.destroy();
-    }, []);
-
-    return useKeyboardEvents((e) => {
-        ref.current
-            ?.getMatches(binds, e)
-            .forEach(({ callback, combo }) => callback(e, combo));
+    const ref = useReactiveRef<T | null>(null, (ref) => {
+        const mice = micetrap(getBinds(), ref, options);
+        return () => mice.destroy();
     });
+
+    return ref;
 }
-
-const useKeyboardEvents = <T extends Element | Document>(
-    fn: (e: KeyboardEvent) => void
-) => {
-    const callback = useEffectCallback(fn);
-
-    return useReactiveRef<T | null>(null, (ref) => {
-        if (!ref) return;
-
-        const abort = new AbortController();
-        const signal = abort.signal;
-        ref.addEventListener("keydown", callback, { signal });
-        ref.addEventListener("keyup", callback, { signal });
-        ref.addEventListener("keypress", callback, { signal });
-
-        return () => abort.abort();
-    });
-};
 
 const useEffectCallback = <T extends (...args: any[]) => any>(cb: T) => {
     const stableRef = useRef<T | null>(null);
@@ -88,14 +50,9 @@ function useReactiveRef<T>(
     callback: (ref: T | null) => void | (() => void)
 ): RefObject<T | null> {
     const ref = useRef<T | null>(initial);
-    const prefRef = useRef<T | null>(initial);
-    const [, rerender] = useReducer((x) => x + 1, 0);
+    const [c, rerender] = useReducer((x) => x + 1, 0);
 
-    useEffect(() => {
-        if (ref.current === prefRef.current) return;
-        prefRef.current = ref.current;
-        return callback(ref.current);
-    });
+    useLayoutEffect(() => callback(ref.current), [c]);
 
     return useMemo(
         () => ({
@@ -103,8 +60,9 @@ function useReactiveRef<T>(
                 return ref.current;
             },
             set current(value) {
+                const current = ref.current;
                 ref.current = value;
-                rerender();
+                if (current !== value) rerender();
             },
         }),
         []

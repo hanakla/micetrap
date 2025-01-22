@@ -1,7 +1,12 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig((options) => ({
-    entry: ["src/index.ts"],
+    entry: {
+        index: "src/index.ts",
+        react: "src/react.ts",
+    },
+    external: ["react", "./index"],
+    outDir: "dist",
     format: ["cjs", "esm"],
     dts: true,
     minify: !options.watch,

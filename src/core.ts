@@ -41,6 +41,11 @@ type ActionPhase = "keyup" | "keydown" | "keypress";
 type ModifierKey = "shift" | "ctrl" | "alt" | "meta";
 type Modifiers = Array<ModifierKey>;
 
+export type MicetrapBind = {
+    keys: string | string[];
+    handler: MicetrapCallback;
+};
+
 export type MicetrapCallback = (
     e: KeyboardEvent,
     combo: string
@@ -48,8 +53,8 @@ export type MicetrapCallback = (
 
 export type ShouldStopCallback = (
     e: KeyboardEvent,
-    element: HTMLElement,
-    rootElement: HTMLElement | Document
+    element: Element,
+    rootElement: Element | Document
 ) => boolean;
 
 export type BindOption = {
@@ -62,8 +67,8 @@ export type BindOption = {
  */
 export function defaultShouldStopCallback(
     e: KeyboardEvent,
-    element: HTMLElement,
-    rootElement: HTMLElement | Document
+    element: Element,
+    rootElement: Element | Document
 ): boolean {
     if (element.classList.contains("mousetrap")) {
         return false;
@@ -78,7 +83,7 @@ export function defaultShouldStopCallback(
         element.tagName === "INPUT" ||
         element.tagName === "SELECT" ||
         element.tagName === "TEXTAREA" ||
-        element.isContentEditable
+        (element as HTMLElement).isContentEditable
     );
 }
 

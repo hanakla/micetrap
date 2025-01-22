@@ -2,48 +2,65 @@ import {
     BindOption,
     defaultShouldStopCallback,
     matchCombo,
+    MicetrapBind,
     MicetrapCallback,
     ShouldStopCallback,
 } from "./core";
 
 export type { MicetrapCallback, ShouldStopCallback };
 
-type MicetrapBind = { keys: string | string[]; callback: MicetrapCallback };
-
 export type Micetrap = {
+    /** Shortcut match inspection hook */
+    hook: ((matches: Array<MatchResult>) => void) | null;
+    /** Resume listening for keyboard events */
+    resume: () => void;
+    /** Pause listening for keyboard events */
+    pause: () => void;
+    /** Get matched bindings for a specific event */
     getMatches: (
         bindMap: Array<MicetrapBind>,
         e: KeyboardEvent
     ) => Array<MicetrapBind & { combo: string }>;
+    /** Destroy the instance */
     destroy: () => void;
 };
 
+type MatchResult = { bind: MicetrapBind; complete: boolean; combo: string };
+
+export type MicetrapOption = BindOption & {
+    /** Timeout for sequence reset */
+    sequenceTimeout?: number;
+    /** Callback to determine if the event should be stopped */
+    stopCallback?: ShouldStopCallback;
+};
+
 export function micetrap(
-    binds: Array<MicetrapBind> = [],
-    target: HTMLElement | Document = typeof window !== "undefined"
+    binds: Array<MicetrapBind> | (() => Array<MicetrapBind>) = [],
+    target: Element | Document | null = typeof window !== "undefined"
         ? window.document
-        : (null as any),
+        : null,
     {
         sequenceTimeout = 1000,
         stopCallback = defaultShouldStopCallback,
         ...options
-    }: BindOption & {
-        sequenceTimeout?: number;
-        stopCallback?: ShouldStopCallback;
-    } = {}
+    }: MicetrapOption = {}
 ): Micetrap {
     const abort = new AbortController();
     const signal = AbortSignal.any(
         [abort.signal, options.signal].filter((s) => !!s)
     );
 
+    let paused = false;
     let sequenceState: string[] = [];
     let sequenceTimer: number | null = null;
 
     const handleKeyEvent = (e: KeyboardEvent) => {
-        if (stopCallback(e, e.target as HTMLElement, target)) return;
+        if (paused || stopCallback(e, e.target as Element, target!)) return;
 
-        for (const bind of binds) {
+        const _binds = typeof binds === "function" ? binds() : binds;
+
+        let matches: MatchResult[] = [];
+        for (const bind of _binds) {
             const match = matchCombo(
                 bind.keys,
                 e,
@@ -53,25 +70,39 @@ export function micetrap(
 
             if (!match) continue;
 
+            matches.push({ ...match, bind });
+
             if (match.complete) {
-                bind.callback(e, bind.keys as string);
+                bind.handler(e, bind.keys as string);
                 sequenceState = [];
             } else {
                 sequenceState.push(match.combo);
-                if (sequenceTimer) clearTimeout(sequenceTimer);
             }
+
+            if (sequenceTimer) clearTimeout(sequenceTimer);
 
             sequenceTimer = window.setTimeout(() => {
                 sequenceState = [];
             }, sequenceTimeout);
         }
+
+        if (matches.length) ret.hook?.(matches);
     };
 
-    target.addEventListener("keydown", handleKeyEvent, { signal });
-    target.addEventListener("keyup", handleKeyEvent, { signal });
-    target.addEventListener("keypress", handleKeyEvent, { signal });
+    if (target) {
+        target.addEventListener("keydown", handleKeyEvent, { signal });
+        target.addEventListener("keyup", handleKeyEvent, { signal });
+        target.addEventListener("keypress", handleKeyEvent, { signal });
+    }
 
     const ret: Micetrap = {
+        hook: null,
+        resume: () => {
+            paused = false;
+        },
+        pause: () => {
+            paused = true;
+        },
         getMatches(bindMap: Array<MicetrapBind>, e: KeyboardEvent) {
             return bindMap
                 .map((bind) => {
@@ -95,5 +126,3 @@ export function micetrap(
 
     return ret;
 }
-
-// micetrap([{ keys: "meta+s", callback: (e) => console.log(e) }]);
