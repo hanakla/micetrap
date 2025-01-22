@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "target": "ES2022",
-        "module": "commonjs",
+        "module": "ES2022",
         "moduleResolution": "node",
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
@@ -18,17 +18,10 @@
         "declarationDir": "dist/declaration",
         "outDir": ".tmp/code",
         "lib": ["dom", "es6"],
-        "typeRoots": ["node_modules/@types"]
+        "types": ["vitest/globals", "vitest/importMeta"]
     },
-    "include": ["src/**/*.ts", "config/**/*.ts", "typings/global.d.ts"],
+    "include": ["src/**/*.ts"],
     "exclude": ["node_modules", "dist", ".tmp"],
     "compileOnSave": false,
-    "buildOnSave": false,
-    "awesomeTypescriptLoaderOptions": {
-        "useCache": true,
-        "cacheDirectory": ".tmp/awcache",
-        "forceIsolatedModules": true,
-        "files": ["src/**/index.ts"],
-        "reportFiles": ["src/**/*.ts"]
-    }
+    "buildOnSave": false
 }
