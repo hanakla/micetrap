@@ -93,7 +93,7 @@ export const micetrap = (
       matches.push({ ...match, bind });
 
       if (match.complete) {
-        if (stopPropagation || bind.stopPropagation) e.stopPropagation();
+        if (bind.stopPropagation ?? stopPropagation) e.stopPropagation();
         if (bind.preventDefault) e.preventDefault();
 
         bind.handler(e, match.combo);

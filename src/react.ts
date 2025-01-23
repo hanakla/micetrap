@@ -29,7 +29,12 @@ export function useMicetrap<T extends Element>(
         stopPropagation: true,
         ...options,
       }),
-    []
+    [
+      options?.sequenceTimeout,
+      options?.stopCallback,
+      options?.stopPropagation,
+      options?.signal,
+    ]
   );
   const getBinds = useEffectCallback(() => binds);
 
@@ -38,8 +43,9 @@ export function useMicetrap<T extends Element>(
   });
 
   useEffect(() => {
-    return () => mice.destroy();
-  }, []);
+    const prev = mice;
+    return () => prev.destroy();
+  }, [mice]);
 
   return [ref, mice];
 }
