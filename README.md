@@ -3,7 +3,7 @@
 `@hanakla/micetrap` is a simple library for handling keyboard shortcuts in TypeScript.  
 Based on [Mousetrap](https://github.com/ccampbell/mousetrap) and [mousetrap-ts](https://github.com/JonWallsten/mousetrap-ts).
 
-**Show example in [StackBlits](https://stackblitz.com/edit/vitejs-vite-muqvhqwc)!**
+**Show example in [StackBlits](https://stackblitz.com/edit/vitejs-vite-muqvhqwc?embed=1&file=src%2FApp.tsx&hideExplorer=1)!**
 
 It is licensed under the Apache 2.0 license.
 
