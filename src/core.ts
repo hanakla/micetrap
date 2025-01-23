@@ -26,7 +26,7 @@
  * @version 1.0.0
  */
 
-import { fromCharCode, timesReduce } from "./utils";
+import { fromCharCode, reduceToMap, toArray } from "./utils";
 
 export type StringMap = {
   [key: string]: string;
@@ -39,12 +39,18 @@ type KeyInfo = {
   action: ActionPhase;
 };
 
-type ActionPhase = "keyup" | "keydown" | "keypress";
+export type ActionPhase = "keyup" | "keydown" | "keypress";
 type ModifierKey = "shift" | "ctrl" | "alt" | "meta";
 type Modifiers = Array<ModifierKey>;
 
 export type MicetrapBind = {
   keys: string | string[];
+  handler: MicetrapCallback;
+  phase?: ActionPhase;
+};
+
+export type FlattenBind = {
+  keys: string;
   handler: MicetrapCallback;
   phase?: ActionPhase;
 };
@@ -93,7 +99,7 @@ export const matchCombo = (
   phase?: ActionPhase,
   mapOverrides?: StringMap
 ): { complete: boolean; combo: string } | null => {
-  combos = Array.isArray(combos) ? combos : [combos];
+  combos = toArray(combos);
 
   for (let combo of combos) {
     const seq = combo.split(" ");
@@ -151,22 +157,20 @@ const _MAP: StringMap = {
 
   // loop through the f keys, f1 to f19 and add them to the map
   // programatically
-  ...timesReduce(
-    19,
-    (index, acc) => ({ ...acc, [112 + index]: `f${index + 1}` }),
-    {}
+  ...reduceToMap(
+    [...Array(19)],
+    (acc, index) => (acc[112 + index] = `f${index + 1}`)
   ),
   // loop through to map numbers on the numeric keypad
-  ...timesReduce(
-    10,
-    (index, acc) =>
+  ...reduceToMap(
+    [...Array(10)],
+    (acc, index) =>
       // This needs to use a string cause otherwise since 0 is falsey
       // mousetrap will never fire for numpad 0 pressed as part of a keydown
       // event.
       //
       // @see https://github.com/ccampbell/mousetrap/pull/258
-      ({ ...acc, [96 + index]: index.toString() }),
-    {}
+      (acc[96 + index] = index.toString())
   ),
 };
 

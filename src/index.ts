@@ -1,12 +1,14 @@
 import {
+  ActionPhase,
   defaultShouldStopCallback,
+  FlattenBind,
   matchCombo,
   MicetrapBind,
   MicetrapCallback,
   ShouldStopCallback,
   StringMap,
 } from "./core";
-import { addListener } from "./utils";
+import { addListener, reduceToMap, toArray } from "./utils";
 
 export type { MicetrapCallback, ShouldStopCallback };
 
@@ -17,6 +19,14 @@ export type Micetrap = {
   resume: () => void;
   /** Pause listening for keyboard events */
   pause: () => void;
+  /** Bind a key combo */
+  bind: (
+    keys: string | string[],
+    handler: MicetrapCallback,
+    options?: { phase?: ActionPhase }
+  ) => void;
+  /** Unbind a key combo */
+  unbind: (keys: string | string[]) => void;
   /** Set the target element to listen for keyboard events */
   setTarget: (target: Element | Document | null) => void;
   /** Manually handle a keyboard event */
@@ -39,10 +49,10 @@ export type MicetrapOption = {
 };
 
 export function micetrap(
-  binds: Array<MicetrapBind> = [],
   target: Element | Document | null = typeof document !== "undefined"
     ? document
     : null,
+  binds?: Array<MicetrapBind>,
   {
     sequenceTimeout = 1000,
     stopCallback = defaultShouldStopCallback,
@@ -57,7 +67,20 @@ export function micetrap(
   let sequenceTimer: number | null = null;
   let overrideMap: StringMap = {};
 
-  const handleEvent = (e: KeyboardEvent, _binds = binds) => {
+  const flatBinds = (
+    binds
+      ? [
+          ...binds.flatMap((b) => {
+            return toArray(b.keys).map((k) => ({ ...b, keys: k }));
+          }),
+        ]
+      : []
+  ) as FlattenBind[];
+
+  const handleEvent = (
+    e: KeyboardEvent,
+    _binds: MicetrapBind[] = flatBinds
+  ) => {
     if (paused || stopCallback(e, e.target as Element, target!)) return;
 
     let matches: MatchResult[] = [];
@@ -114,6 +137,22 @@ export function micetrap(
     },
     pause: () => {
       paused = true;
+    },
+    bind: (
+      keys: string | string[],
+      handler: MicetrapCallback,
+      { phase }: { phase?: ActionPhase } = {}
+    ) => {
+      toArray(keys).map((k) => flatBinds.push({ keys: k, handler, phase }));
+    },
+    unbind: (keys: string | string[]) => {
+      const keyIndexMap = reduceToMap(flatBinds, (acc, { keys: k }, index) => {
+        acc[k] ? acc[k].push(index) : (acc[k] = [index]);
+      });
+
+      toArray(keys).map((k) => {
+        keyIndexMap[k]?.forEach((i) => flatBinds.splice(i, 1));
+      });
     },
     handleEvent,
     setTarget,

@@ -4,7 +4,7 @@ import { MicetrapBind } from "./core";
 import { addListener } from "./utils";
 
 export function useDocumentMicetrap(binds: MicetrapBind[]) {
-  const mice = useMemo(() => micetrap([], null), []);
+  const mice = useMemo(() => micetrap(), []);
   const getBinds = useEffectCallback(() => binds);
 
   useKeyboardEvents((e) => {
@@ -22,7 +22,7 @@ export function useMicetrap<T extends Element>(
   binds: MicetrapBind[],
   options?: MicetrapOption
 ): [ReactiveRefObject<T | null>, Micetrap] {
-  const mice = useMemo(() => micetrap([], null, options), []);
+  const mice = useMemo(() => micetrap(null, [], options), []);
   const getBinds = useEffectCallback(() => binds);
 
   const ref = useKeyboardEvents<T | null>((e) => {
