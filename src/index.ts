@@ -5,6 +5,7 @@ import {
   MicetrapBind,
   MicetrapCallback,
   ShouldStopCallback,
+  StringMap,
 } from "./core";
 
 export type { MicetrapCallback, ShouldStopCallback };
@@ -16,11 +17,8 @@ export type Micetrap = {
   resume: () => void;
   /** Pause listening for keyboard events */
   pause: () => void;
-  /** Get matched bindings for a specific event */
-  getMatches: (
-    bindMap: Array<MicetrapBind>,
-    e: KeyboardEvent
-  ) => Array<MicetrapBind & { combo: string }>;
+  /** allow custom key mappings */
+  addKeycodes: (keycodes: Record<string, number>) => void;
   /** Destroy the instance */
   destroy: () => void;
 };
@@ -53,6 +51,7 @@ export function micetrap(
   let paused = false;
   let sequenceState: string[] = [];
   let sequenceTimer: number | null = null;
+  let overrideMap: StringMap = {};
 
   const handleKeyEvent = (e: KeyboardEvent) => {
     if (paused || stopCallback(e, e.target as Element, target!)) return;
@@ -62,6 +61,13 @@ export function micetrap(
     let matches: MatchResult[] = [];
     for (const bind of _binds) {
       const match = matchCombo(bind.keys, e, sequenceState.length, options);
+      const match = matchCombo(
+        bind.keys,
+        e,
+        sequenceState.length,
+        options,
+        overrideMap
+      );
 
       if (!match) continue;
 
@@ -98,21 +104,10 @@ export function micetrap(
     pause: () => {
       paused = true;
     },
-    getMatches(bindMap: Array<MicetrapBind>, e: KeyboardEvent) {
-      return bindMap
-        .map((bind) => {
-          const result = matchCombo(
-            bind.keys,
-            e,
-            sequenceState.length,
-            options
-          );
-
-          if (!result || !result.complete) return false;
-
-          return { ...bind, combo: result.combo };
-        })
-        .filter((v) => !!v);
+    addKeycodes: (keycodes: Record<string, number>) => {
+      for (const [k, v] of Object.entries(keycodes)) {
+        overrideMap[k] = v;
+      }
     },
     destroy() {
       abort.abort();

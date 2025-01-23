@@ -94,7 +94,8 @@ export function matchCombo(
   combos: string | string[],
   event: KeyboardEvent,
   seqLevel: number = 0,
-  option: BindOption = {}
+  option: BindOption = {},
+  mapOverrides?: StringMap
 ): { complete: boolean; combo: string } | null {
   combos = Array.isArray(combos) ? combos : [combos];
 
@@ -103,8 +104,8 @@ export function matchCombo(
     combo = seq[seqLevel];
     if (!combo) continue;
 
-    const keyInfo = getKeyInfo(combo, option.action);
-    const character = characterFromEvent(event);
+    const keyInfo = getKeyInfo(combo, option.phase, mapOverrides);
+    const character = characterFromEvent(event, mapOverrides);
     const modifiers = eventModifiers(event);
 
     if (
@@ -243,7 +244,12 @@ const _SPECIAL_ALIASES: { [key: string]: string } = {
 /**
  * takes the event and returns the key character
  */
-function characterFromEvent(e: KeyboardEvent): string {
+function characterFromEvent(
+  e: KeyboardEvent,
+  mapOverrides?: StringMap
+): string {
+  const _map = mapOverrides ? Object.assign({}, _MAP, mapOverrides) : _MAP;
+
   // for keypress events we should return the character as is
   if (e.type === "keypress") {
     let character = String.fromCharCode(e.which);
@@ -265,7 +271,7 @@ function characterFromEvent(e: KeyboardEvent): string {
   }
 
   // for non keypress events the special maps are needed
-  if (_MAP[e.which]) return _MAP[e.which];
+  if (_map[e.which]) return _map[e.which];
   if (KEYCODE_MAP[e.which]) KEYCODE_MAP[e.which];
 
   // if it is not in the special map
@@ -294,7 +300,11 @@ function eventModifiers(e: KeyboardEvent): Modifiers {
  * Gets info for a specific key combination
  * @returns {Object}
  */
-function getKeyInfo(combination: string, action?: ActionPhase): KeyInfo {
+function getKeyInfo(
+  combination: string,
+  action?: ActionPhase,
+  mapOverrides?: StringMap
+): KeyInfo {
   let keys: string[];
   const modifiers: Modifiers = [];
 
@@ -323,7 +333,7 @@ function getKeyInfo(combination: string, action?: ActionPhase): KeyInfo {
 
   // depending on what the key combination is
   // we will try to pick the best event for it
-  action = pickBestAction(key!, modifiers, action);
+  action = pickBestAction(key!, modifiers, action, mapOverrides);
 
   return {
     key: key!,
@@ -338,12 +348,15 @@ function getKeyInfo(combination: string, action?: ActionPhase): KeyInfo {
 function pickBestAction(
   key: string,
   modifiers: Modifiers,
-  action?: ActionPhase
+  action?: ActionPhase,
+  mapOverrides?: StringMap
 ) {
+  const _map = mapOverrides ? Object.assign({}, _MAP, mapOverrides) : _MAP;
+
   // if no action was picked in we should try to pick the one
   // that we think would work best for this key
   if (!action) {
-    action = getReverseMap()[key] ? "keydown" : "keypress";
+    action = getReverseMap(_map)[key] ? "keydown" : "keypress";
   }
 
   // modifier keys don't work as expected with keypress,
@@ -359,8 +372,8 @@ function pickBestAction(
  * reverses the map lookup so that we can look for specific keys
  * to see what can and can't use keypress
  */
-function getReverseMap(): StringMap {
-  const reverseMap = {};
+function getReverseMap(map: StringMap): StringMap {
+  const reverseMap = { ...map };
 
   for (const key in _MAP) {
     // pull out the numeric keypad from here cause keypress should
