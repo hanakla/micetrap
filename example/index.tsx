@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
 function App() {
   const [message, setMessage] = useState<string>("");
   const [regionMessage, setRegionMessage] = useState<string>("");
+  const [stopPropagation, setStopPropagation] = useState<boolean>(false);
 
   useDocumentMicetrap([
     {
@@ -31,14 +32,16 @@ function App() {
     { keys: "s", handler: () => setMessage("S") },
   ]);
 
-  const ref = useMicetrap<HTMLDivElement>([
+  const [ref] = useMicetrap<HTMLDivElement>([
     {
       keys: "up up down down left right left right b a",
       handler: () => setRegionMessage("Konami Code!"),
+      stopPropagation,
     },
     {
       keys: "q w e",
       handler: () => setRegionMessage("Q W E"),
+      stopPropagation,
     },
     {
       keys: "meta+s",
@@ -46,14 +49,14 @@ function App() {
         e.preventDefault();
         setRegionMessage("Save? (Meta+S)");
       },
+      stopPropagation,
     },
     {
       keys: "s",
       handler: () => setRegionMessage("S"),
+      stopPropagation,
     },
   ]);
-
-  console.log("render");
 
   return (
     <div className="p-4">
@@ -79,17 +82,21 @@ function App() {
       <div
         ref={ref}
         tabIndex={-1}
-        // style={{
-        //     outline: "2px solid red",
-        //     marginTop: "32px",
-        //     padding: "16px",
-        //     border: "1px solid black",
-        // }}
         className="my-[32px] shadow-[0_0_0_2px_rgba(74,180,255,0.345)] focus:shadow-[0_0_0_2px_#4ab4ff]"
       >
-        Regional:
-        <br />
-        {regionMessage}
+        Regional:{" "}
+        <label>
+          <input
+            type="checkbox"
+            checked={stopPropagation}
+            onChange={(e) => {
+              ref.current?.focus();
+              setStopPropagation(e.target.checked);
+            }}
+          />{" "}
+          Stop Propagation
+        </label>
+        <div>{regionMessage}</div>
       </div>
     </div>
   );

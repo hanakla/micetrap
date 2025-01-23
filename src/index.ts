@@ -1,38 +1,33 @@
-import {
-  ActionPhase,
-  defaultShouldStopCallback,
+import { defaultShouldStopCallback, matchCombo } from "./core";
+import type {
   FlattenBind,
-  matchCombo,
   MicetrapBind,
   MicetrapCallback,
   ShouldStopCallback,
   StringMap,
-} from "./core";
+} from "./types";
 import { addListener, reduceToMap, toArray } from "./utils";
 
 export type { MicetrapCallback, ShouldStopCallback };
 
 export type Micetrap = {
+  binds: Array<MicetrapBind>;
   /** Shortcut match inspection hook */
   hook: ((matches: Array<MatchResult>) => void) | null;
   /** Resume listening for keyboard events */
-  resume: () => void;
+  resume: () => Micetrap;
   /** Pause listening for keyboard events */
-  pause: () => void;
+  pause: () => Micetrap;
   /** Bind a key combo */
-  bind: (
-    keys: string | string[],
-    handler: MicetrapCallback,
-    options?: { phase?: ActionPhase }
-  ) => void;
+  bind: (binds: Array<MicetrapBind>) => Micetrap;
   /** Unbind a key combo */
-  unbind: (keys: string | string[]) => void;
+  unbind: (keys: string | string[], handler?: MicetrapCallback) => Micetrap;
   /** Set the target element to listen for keyboard events */
-  setTarget: (target: Element | Document | null) => void;
+  setTarget: (target: Element | Document | null) => Micetrap;
   /** Manually handle a keyboard event */
   handleEvent: (e: KeyboardEvent, binds: Array<MicetrapBind>) => void;
   /** allow custom key mappings */
-  addKeycodes: (keycodes: Record<number, string>) => void;
+  addKeycodes: (keycodes: Record<number, string>) => Micetrap;
   /** Destroy the instance */
   destroy: () => void;
 };
@@ -42,40 +37,40 @@ type MatchResult = { bind: MicetrapBind; complete: boolean; combo: string };
 export type MicetrapOption = {
   /** Signal to abort the micetrap */
   signal?: AbortSignal;
-  /** Timeout for sequence reset */
+  /**
+   * Timeout for sequence reset
+   * @default 1000
+   */
   sequenceTimeout?: number;
+  /**
+   * Stop the event from propagating when a bind is matched
+   * @default false
+   */
+  stopPropagation?: boolean;
   /** Callback to determine if the event should be stopped */
   stopCallback?: ShouldStopCallback;
 };
 
-export function micetrap(
+export const micetrap = (
   target: Element | Document | null = typeof document !== "undefined"
     ? document
     : null,
-  binds?: Array<MicetrapBind>,
   {
     sequenceTimeout = 1000,
     stopCallback = defaultShouldStopCallback,
+    stopPropagation = false,
     signal: rootSignal,
   }: MicetrapOption = {}
-): Micetrap {
+): Micetrap => {
   let abort: AbortController | undefined;
   let signal: AbortSignal | undefined;
 
   let paused = false;
   let sequenceState: string[] = [];
   let sequenceTimer: number | null = null;
-  let overrideMap: StringMap = {};
+  const overrideMap: StringMap = {};
 
-  const flatBinds = (
-    binds
-      ? [
-          ...binds.flatMap((b) => {
-            return toArray(b.keys).map((k) => ({ ...b, keys: k }));
-          }),
-        ]
-      : []
-  ) as FlattenBind[];
+  let flatBinds = [] as FlattenBind[];
 
   const handleEvent = (
     e: KeyboardEvent,
@@ -98,6 +93,9 @@ export function micetrap(
       matches.push({ ...match, bind });
 
       if (match.complete) {
+        if (stopPropagation || bind.stopPropagation) e.stopPropagation();
+        if (bind.preventDefault) e.preventDefault();
+
         bind.handler(e, match.combo);
         sequenceState = [];
       } else {
@@ -132,39 +130,55 @@ export function micetrap(
 
   const ret: Micetrap = {
     hook: null,
+    get binds() {
+      return [...flatBinds];
+    },
     resume: () => {
       paused = false;
+      return ret;
     },
     pause: () => {
       paused = true;
+      return ret;
     },
-    bind: (
-      keys: string | string[],
-      handler: MicetrapCallback,
-      { phase }: { phase?: ActionPhase } = {}
-    ) => {
-      toArray(keys).map((k) => flatBinds.push({ keys: k, handler, phase }));
+    bind: (binds) => {
+      binds.forEach((b) =>
+        toArray(b.keys).forEach((k) => {
+          flatBinds.push({ ...b, keys: k });
+          addListener(b.signal, "abort", () => ret.unbind(k, b.handler));
+        })
+      );
+
+      return ret;
     },
-    unbind: (keys: string | string[]) => {
+    unbind: (keys, handler?) => {
       const keyIndexMap = reduceToMap(flatBinds, (acc, { keys: k }, index) => {
         acc[k] ? acc[k].push(index) : (acc[k] = [index]);
       });
 
       toArray(keys).map((k) => {
-        keyIndexMap[k]?.forEach((i) => flatBinds.splice(i, 1));
+        keyIndexMap[k]?.forEach((i) => {
+          if (!handler || flatBinds[i].handler === handler) {
+            flatBinds.splice(i, 1);
+          }
+        });
       });
+
+      return ret;
     },
     handleEvent,
-    setTarget,
+    setTarget: (newTarget) => (setTarget(newTarget), ret),
     addKeycodes: (keycodes: Record<number, string>) => {
       for (const [k, v] of Object.entries(keycodes)) {
         overrideMap[k] = v;
       }
+      return ret;
     },
     destroy() {
+      flatBinds = [];
       abort?.abort();
     },
   };
 
   return ret;
-}
+};

@@ -26,59 +26,29 @@
  * @version 1.0.0
  */
 
+import type {
+  ActionPhase,
+  KeyInfo,
+  ModifierKey,
+  Modifiers,
+  ShouldStopCallback,
+  StringMap,
+} from "./types";
 import { fromCharCode, reduceToMap, toArray } from "./utils";
-
-export type StringMap = {
-  [key: string]: string;
-  [key: number]: string;
-};
-
-type KeyInfo = {
-  key: string;
-  modifiers: Modifiers;
-  action: ActionPhase;
-};
-
-export type ActionPhase = "keyup" | "keydown" | "keypress";
-type ModifierKey = "shift" | "ctrl" | "alt" | "meta";
-type Modifiers = Array<ModifierKey>;
-
-export type MicetrapBind = {
-  keys: string | string[];
-  handler: MicetrapCallback;
-  phase?: ActionPhase;
-};
-
-export type FlattenBind = {
-  keys: string;
-  handler: MicetrapCallback;
-  phase?: ActionPhase;
-};
-
-export type MicetrapCallback = (
-  e: KeyboardEvent,
-  combo: string
-) => boolean | void;
-
-export type ShouldStopCallback = (
-  e: KeyboardEvent,
-  element: Element,
-  rootElement: Element | Document
-) => boolean;
 
 /**
  * should we stop this event before firing off callbacks
  */
-export const defaultShouldStopCallback = (
-  e: KeyboardEvent,
-  element: Element,
-  rootElement: Element | Document
+export const defaultShouldStopCallback: ShouldStopCallback = (
+  e,
+  element,
+  rootElement
 ): boolean => {
   if (element.classList.contains("mousetrap")) {
     return false;
   }
 
-  if (rootElement.contains(element)) {
+  if (rootElement?.contains(element)) {
     return false;
   }
 
@@ -159,12 +129,12 @@ const _MAP: StringMap = {
   // programatically
   ...reduceToMap(
     [...Array(19)],
-    (acc, index) => (acc[112 + index] = `f${index + 1}`)
+    (acc, _, index) => (acc[112 + index] = `f${index + 1}`)
   ),
   // loop through to map numbers on the numeric keypad
   ...reduceToMap(
     [...Array(10)],
-    (acc, index) =>
+    (acc, _, index) =>
       // This needs to use a string cause otherwise since 0 is falsey
       // mousetrap will never fire for numpad 0 pressed as part of a keydown
       // event.

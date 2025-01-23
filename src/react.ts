@@ -1,17 +1,18 @@
 import { useEffect, useLayoutEffect, useMemo, useReducer, useRef } from "react";
 import { Micetrap, micetrap, MicetrapOption } from "./index";
-import { MicetrapBind } from "./core";
+import type { MicetrapBind } from "./types";
 import { addListener } from "./utils";
 
 export function useDocumentMicetrap(binds: MicetrapBind[]) {
   const mice = useMemo(() => micetrap(), []);
   const getBinds = useEffectCallback(() => binds);
 
-  useKeyboardEvents((e) => {
+  const ref = useKeyboardEvents((e) => {
     mice.handleEvent(e, getBinds());
   });
 
   useEffect(() => {
+    ref.current = document;
     return () => mice.destroy();
   }, []);
 
@@ -22,7 +23,14 @@ export function useMicetrap<T extends Element>(
   binds: MicetrapBind[],
   options?: MicetrapOption
 ): [ReactiveRefObject<T | null>, Micetrap] {
-  const mice = useMemo(() => micetrap(null, [], options), []);
+  const mice = useMemo(
+    () =>
+      micetrap(null, {
+        stopPropagation: true,
+        ...options,
+      }),
+    []
+  );
   const getBinds = useEffectCallback(() => binds);
 
   const ref = useKeyboardEvents<T | null>((e) => {

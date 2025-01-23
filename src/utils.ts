@@ -1,12 +1,12 @@
 /** Utils for minimizing bundle */
 
 export const addListener = (
-  target: EventTarget,
+  target: EventTarget | undefined | null,
   type: string,
   listener: EventListener,
   options?: AddEventListenerOptions
 ) => {
-  target.addEventListener(type, listener, options);
+  target?.addEventListener(type, listener, options);
 };
 
 export const reduceToMap = <T, R extends object>(

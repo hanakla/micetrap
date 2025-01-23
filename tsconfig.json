@@ -21,7 +21,8 @@
     "types": ["vitest/globals", "vitest/importMeta"],
     "jsx": "react-jsx",
     "paths": {
-      "micetrap": ["./"]
+      "micetrap": ["./"],
+      "micetrap/react": ["./dist/react"]
     }
   },
   "exclude": ["node_modules", "dist", ".tmp"],
