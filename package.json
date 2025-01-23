@@ -34,7 +34,8 @@
     "clean:cache": "rimraf -- .tmp",
     "prepublishOnly": "npm run build",
     "precommit": "",
-    "prepush": "npm run build"
+    "prepush": "npm run build",
+    "test": "vitest"
   },
   "devDependencies": {
     "@types/node": "^22.10.7",

@@ -56,10 +56,10 @@ function keyboardEvent(
     altKey?: boolean;
   } = {}
 ): KeyboardEvent {
-  return Object.assign(
-    new KeyboardEvent("keydown", { key, keyCode, target, ...modifiers }),
-    {
-      which: keyCode,
-    }
+  const o = Object.assign(
+    { target, which: keyCode },
+    new KeyboardEvent("keydown", { key, keyCode, ...modifiers })
   );
+
+  return Object.setPrototypeOf(o, KeyboardEvent.prototype);
 }
