@@ -26,7 +26,7 @@
  * @version 1.0.0
  */
 
-type StringMap = {
+export type StringMap = {
   [key: string]: string;
   [key: number]: string;
 };
@@ -44,6 +44,7 @@ type Modifiers = Array<ModifierKey>;
 export type MicetrapBind = {
   keys: string | string[];
   handler: MicetrapCallback;
+  phase?: ActionPhase;
 };
 
 export type MicetrapCallback = (
@@ -56,11 +57,6 @@ export type ShouldStopCallback = (
   element: Element,
   rootElement: Element | Document
 ) => boolean;
-
-export type BindOption = {
-  action?: ActionPhase;
-  signal?: AbortSignal;
-};
 
 /**
  * should we stop this event before firing off callbacks
@@ -94,7 +90,7 @@ export function matchCombo(
   combos: string | string[],
   event: KeyboardEvent,
   seqLevel: number = 0,
-  option: BindOption = {},
+  phase?: ActionPhase,
   mapOverrides?: StringMap
 ): { complete: boolean; combo: string } | null {
   combos = Array.isArray(combos) ? combos : [combos];
@@ -104,7 +100,7 @@ export function matchCombo(
     combo = seq[seqLevel];
     if (!combo) continue;
 
-    const keyInfo = getKeyInfo(combo, option.phase, mapOverrides);
+    const keyInfo = getKeyInfo(combo, phase, mapOverrides);
     const character = characterFromEvent(event, mapOverrides);
     const modifiers = eventModifiers(event);
 

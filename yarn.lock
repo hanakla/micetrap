@@ -187,6 +187,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@hanakla/micetrap@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "@hanakla/micetrap@workspace:."
+  dependencies:
+    "@types/node": "npm:^22.10.7"
+    "@types/react": "npm:^19.0.7"
+    "@types/react-dom": "npm:^19"
+    autoprefixer: "npm:^10.4.20"
+    happy-dom: "npm:^16.7.2"
+    husky: "npm:0.14.3"
+    postcss: "npm:^8.5.1"
+    react: "npm:^19.0.0"
+    react-dom: "npm:^19.0.0"
+    rimraf: "npm:2.6.2"
+    tailwindcss: "npm:^3.4.17"
+    tsup: "npm:^8.3.5"
+    typescript: "npm:^5.7.3"
+    vite: "npm:^6.0.11"
+    vitest: "npm:^3.0.3"
+  languageName: unknown
+  linkType: soft
+
 "@isaacs/cliui@npm:^8.0.2":
   version: 8.0.2
   resolution: "@isaacs/cliui@npm:8.0.2"
@@ -1532,28 +1554,6 @@ __metadata:
   checksum: 10c0/254a8a4605b58f450308fc474c82ac9a094848081bf4c06778200207820e5193726dc563a0d2c16468810516a5c97d9d3ea0ca6585d23c58ccfff2403e8dbbeb
   languageName: node
   linkType: hard
-
-"micetrap@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "micetrap@workspace:."
-  dependencies:
-    "@types/node": "npm:^22.10.7"
-    "@types/react": "npm:^19.0.7"
-    "@types/react-dom": "npm:^19"
-    autoprefixer: "npm:^10.4.20"
-    happy-dom: "npm:^16.7.2"
-    husky: "npm:0.14.3"
-    postcss: "npm:^8.5.1"
-    react: "npm:^19.0.0"
-    react-dom: "npm:^19.0.0"
-    rimraf: "npm:2.6.2"
-    tailwindcss: "npm:^3.4.17"
-    tsup: "npm:^8.3.5"
-    typescript: "npm:^5.7.3"
-    vite: "npm:^6.0.11"
-    vitest: "npm:^3.0.3"
-  languageName: unknown
-  linkType: soft
 
 "micromatch@npm:^4.0.8":
   version: 4.0.8

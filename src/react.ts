@@ -1,29 +1,59 @@
-import { RefObject, useLayoutEffect, useMemo, useReducer, useRef } from "react";
-import { micetrap, MicetrapOption } from "./index";
+import { useEffect, useLayoutEffect, useMemo, useReducer, useRef } from "react";
+import { Micetrap, micetrap, MicetrapOption } from "./index";
 import { MicetrapBind } from "./core";
+import { addListener } from "./utils";
 
 export function useDocumentMicetrap(binds: MicetrapBind[]) {
+  const mice = useMemo(() => micetrap([], null), []);
   const getBinds = useEffectCallback(() => binds);
 
-  useLayoutEffect(() => {
-    const mice = micetrap(getBinds, document);
+  useKeyboardEvents((e) => {
+    mice.handleEvent(e, getBinds());
+  });
+
+  useEffect(() => {
     return () => mice.destroy();
   }, []);
+
+  return mice;
 }
 
 export function useMicetrap<T extends Element>(
   binds: MicetrapBind[],
   options?: MicetrapOption
-) {
+): [ReactiveRefObject<T | null>, Micetrap] {
+  const mice = useMemo(() => micetrap([], null, options), []);
   const getBinds = useEffectCallback(() => binds);
 
-  const ref = useReactiveRef<T | null>(null, (ref) => {
-    const mice = micetrap(getBinds(), ref, options);
-    return () => mice.destroy();
+  const ref = useKeyboardEvents<T | null>((e) => {
+    mice.handleEvent(e, getBinds());
   });
 
-  return ref;
+  useEffect(() => {
+    return () => mice.destroy();
+  }, []);
+
+  return [ref, mice];
 }
+
+const useKeyboardEvents = <T extends Element | Document | null>(
+  fn: (e: KeyboardEvent) => void
+) => {
+  const callback = useEffectCallback(fn);
+
+  return useReactiveRef<T | null>(null, (ref) => {
+    if (!ref) return;
+
+    const abort = new AbortController();
+    const signal = abort.signal;
+
+    addListener(ref, "keydown", callback, { signal });
+    addListener(ref, "keyup", callback, { signal });
+    addListener(ref, "keypress", callback, { signal });
+
+    return () => abort.abort();
+  });
+};
 
 const useEffectCallback = <T extends (...args: any[]) => any>(cb: T) => {
   const stableRef = useRef<T | null>(null);
@@ -42,10 +72,14 @@ const useEffectCallback = <T extends (...args: any[]) => any>(cb: T) => {
   return stableRef.current;
 };
 
+type ReactiveRefObject<T> = {
+  current: T | null;
+};
+
 function useReactiveRef<T>(
   initial: T,
   callback: (ref: T | null) => void | (() => void)
-): RefObject<T | null> {
+): ReactiveRefObject<T | null> {
   const ref = useRef<T | null>(initial);
   const [c, rerender] = useReducer((x) => x + 1, 0);
 

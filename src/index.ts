@@ -1,5 +1,4 @@
 import {
-  BindOption,
   defaultShouldStopCallback,
   matchCombo,
   MicetrapBind,
@@ -7,6 +6,7 @@ import {
   ShouldStopCallback,
   StringMap,
 } from "./core";
+import { addListener, createAbortController } from "./utils";
 
 export type { MicetrapCallback, ShouldStopCallback };
 
@@ -17,15 +17,21 @@ export type Micetrap = {
   resume: () => void;
   /** Pause listening for keyboard events */
   pause: () => void;
+  /** Set the target element to listen for keyboard events */
+  setTarget: (target: Element | Document | null) => void;
+  /** Manually handle a keyboard event */
+  handleEvent: (e: KeyboardEvent, binds: Array<MicetrapBind>) => void;
   /** allow custom key mappings */
-  addKeycodes: (keycodes: Record<string, number>) => void;
+  addKeycodes: (keycodes: Record<number, string>) => void;
   /** Destroy the instance */
   destroy: () => void;
 };
 
 type MatchResult = { bind: MicetrapBind; complete: boolean; combo: string };
 
-export type MicetrapOption = BindOption & {
+export type MicetrapOption = {
+  /** Signal to abort the micetrap */
+  signal?: AbortSignal;
   /** Timeout for sequence reset */
   sequenceTimeout?: number;
   /** Callback to determine if the event should be stopped */
@@ -33,39 +39,34 @@ export type MicetrapOption = BindOption & {
 };
 
 export function micetrap(
-  binds: Array<MicetrapBind> | (() => Array<MicetrapBind>) = [],
+  binds: Array<MicetrapBind> = [],
   target: Element | Document | null = typeof window !== "undefined"
     ? window.document
     : null,
   {
     sequenceTimeout = 1000,
     stopCallback = defaultShouldStopCallback,
-    ...options
+    signal: rootSignal,
   }: MicetrapOption = {}
 ): Micetrap {
-  const abort = new AbortController();
-  const signal = AbortSignal.any(
-    [abort.signal, options.signal].filter((s) => !!s)
-  );
+  let abort = createAbortController();
+  let signal = AbortSignal.any([abort.signal, rootSignal].filter((s) => !!s));
 
   let paused = false;
   let sequenceState: string[] = [];
   let sequenceTimer: number | null = null;
   let overrideMap: StringMap = {};
 
-  const handleKeyEvent = (e: KeyboardEvent) => {
+  const handleEvent = (e: KeyboardEvent, _binds = binds) => {
     if (paused || stopCallback(e, e.target as Element, target!)) return;
-
-    const _binds = typeof binds === "function" ? binds() : binds;
 
     let matches: MatchResult[] = [];
     for (const bind of _binds) {
-      const match = matchCombo(bind.keys, e, sequenceState.length, options);
       const match = matchCombo(
         bind.keys,
         e,
         sequenceState.length,
-        options,
+        bind.phase,
         overrideMap
       );
 
@@ -74,7 +75,7 @@ export function micetrap(
       matches.push({ ...match, bind });
 
       if (match.complete) {
-        bind.handler(e, bind.keys as string);
+        bind.handler(e, match.combo);
         sequenceState = [];
       } else {
         sequenceState.push(match.combo);
@@ -90,11 +91,21 @@ export function micetrap(
     if (matches.length) ret.hook?.(matches);
   };
 
-  if (target) {
-    target.addEventListener("keydown", handleKeyEvent, { signal });
-    target.addEventListener("keyup", handleKeyEvent, { signal });
-    target.addEventListener("keypress", handleKeyEvent, { signal });
-  }
+  const setTarget = (newTarget: Element | Document | null) => {
+    abort.abort();
+    abort = createAbortController();
+    signal = AbortSignal.any([abort.signal, rootSignal].filter((s) => !!s));
+
+    target = newTarget;
+
+    if (target) {
+      addListener(target, "keydown", handleEvent, { signal });
+      addListener(target, "keyup", handleEvent, { signal });
+      addListener(target, "keypress", handleEvent, { signal });
+    }
+  };
+
+  setTarget(target);
 
   const ret: Micetrap = {
     hook: null,
@@ -104,7 +115,9 @@ export function micetrap(
     pause: () => {
       paused = true;
     },
-    addKeycodes: (keycodes: Record<string, number>) => {
+    handleEvent,
+    setTarget,
+    addKeycodes: (keycodes: Record<number, string>) => {
       for (const [k, v] of Object.entries(keycodes)) {
         overrideMap[k] = v;
       }

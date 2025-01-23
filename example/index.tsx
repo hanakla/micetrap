@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 import {} from "micetrap";
 import { useDocumentMicetrap, useMicetrap } from "micetrap/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 document.addEventListener("DOMContentLoaded", () => {
   const root = document.getElementById("root")!;
