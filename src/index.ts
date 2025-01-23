@@ -6,7 +6,7 @@ import {
   ShouldStopCallback,
   StringMap,
 } from "./core";
-import { addListener, createAbortController } from "./utils";
+import { addListener } from "./utils";
 
 export type { MicetrapCallback, ShouldStopCallback };
 
@@ -40,8 +40,8 @@ export type MicetrapOption = {
 
 export function micetrap(
   binds: Array<MicetrapBind> = [],
-  target: Element | Document | null = typeof window !== "undefined"
-    ? window.document
+  target: Element | Document | null = typeof document !== "undefined"
+    ? document
     : null,
   {
     sequenceTimeout = 1000,
@@ -49,8 +49,8 @@ export function micetrap(
     signal: rootSignal,
   }: MicetrapOption = {}
 ): Micetrap {
-  let abort = createAbortController();
-  let signal = AbortSignal.any([abort.signal, rootSignal].filter((s) => !!s));
+  let abort: AbortController | undefined;
+  let signal: AbortSignal | undefined;
 
   let paused = false;
   let sequenceState: string[] = [];
@@ -83,17 +83,17 @@ export function micetrap(
 
       if (sequenceTimer) clearTimeout(sequenceTimer);
 
-      sequenceTimer = window.setTimeout(() => {
+      sequenceTimer = setTimeout(() => {
         sequenceState = [];
-      }, sequenceTimeout);
+      }, sequenceTimeout) as unknown as number;
     }
 
     if (matches.length) ret.hook?.(matches);
   };
 
   const setTarget = (newTarget: Element | Document | null) => {
-    abort.abort();
-    abort = createAbortController();
+    abort?.abort();
+    abort = new AbortController();
     signal = AbortSignal.any([abort.signal, rootSignal].filter((s) => !!s));
 
     target = newTarget;
@@ -123,7 +123,7 @@ export function micetrap(
       }
     },
     destroy() {
-      abort.abort();
+      abort?.abort();
     },
   };
 

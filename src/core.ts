@@ -26,6 +26,8 @@
  * @version 1.0.0
  */
 
+import { fromCharCode, timesReduce } from "./utils";
+
 export type StringMap = {
   [key: string]: string;
   [key: number]: string;
@@ -61,11 +63,11 @@ export type ShouldStopCallback = (
 /**
  * should we stop this event before firing off callbacks
  */
-export function defaultShouldStopCallback(
+export const defaultShouldStopCallback = (
   e: KeyboardEvent,
   element: Element,
   rootElement: Element | Document
-): boolean {
+): boolean => {
   if (element.classList.contains("mousetrap")) {
     return false;
   }
@@ -76,23 +78,21 @@ export function defaultShouldStopCallback(
 
   // stop for input, select, and textarea
   return (
-    element.tagName === "INPUT" ||
-    element.tagName === "SELECT" ||
-    element.tagName === "TEXTAREA" ||
+    ["INPUT", "SELECT", "TEXTAREA"].includes(element.tagName) ||
     (element as HTMLElement).isContentEditable
   );
-}
+};
 
 /**
  * Checks if the given combo matches the event
  */
-export function matchCombo(
+export const matchCombo = (
   combos: string | string[],
   event: KeyboardEvent,
   seqLevel: number = 0,
   phase?: ActionPhase,
   mapOverrides?: StringMap
-): { complete: boolean; combo: string } | null {
+): { complete: boolean; combo: string } | null => {
   combos = Array.isArray(combos) ? combos : [combos];
 
   for (let combo of combos) {
@@ -116,7 +116,7 @@ export function matchCombo(
   }
 
   return null;
-}
+};
 
 /**
  * mapping of special keycodes to their corresponding keys
@@ -240,15 +240,15 @@ const _SPECIAL_ALIASES: { [key: string]: string } = {
 /**
  * takes the event and returns the key character
  */
-function characterFromEvent(
+const characterFromEvent = (
   e: KeyboardEvent,
   mapOverrides?: StringMap
-): string {
+): string => {
   const _map = mapOverrides ? Object.assign({}, _MAP, mapOverrides) : _MAP;
 
   // for keypress events we should return the character as is
   if (e.type === "keypress") {
-    let character = String.fromCharCode(e.which);
+    let character = fromCharCode(e.which);
 
     // if the shift key is not pressed then it is safe to assume
     // that we want the character to be lowercase.  this means if
@@ -275,32 +275,27 @@ function characterFromEvent(
   // with keydown and keyup events the character seems to always
   // come in as an uppercase character whether you are pressing shift
   // or not.  we should make sure it is always lowercase for comparisons
-  return String.fromCharCode(e.which).toLowerCase();
-}
+  return fromCharCode(e.which).toLowerCase();
+};
 
 /**
  * takes a key event and figures out what the modifiers are
  */
-function eventModifiers(e: KeyboardEvent): Modifiers {
-  const modifiers: Modifiers = [];
-
-  if (e.shiftKey) modifiers.push("shift");
-  if (e.altKey) modifiers.push("alt");
-  if (e.ctrlKey) modifiers.push("ctrl");
-  if (e.metaKey) modifiers.push("meta");
-
-  return modifiers;
-}
+const eventModifiers = (e: KeyboardEvent): Modifiers => {
+  return (["shift", "alt", "ctrl", "meta"] as const).filter(
+    (k) => e[`${k}Key`]
+  );
+};
 
 /**
  * Gets info for a specific key combination
  * @returns {Object}
  */
-function getKeyInfo(
+const getKeyInfo = (
   combination: string,
   action?: ActionPhase,
   mapOverrides?: StringMap
-): KeyInfo {
+): KeyInfo => {
   let keys: string[];
   const modifiers: Modifiers = [];
 
@@ -336,17 +331,17 @@ function getKeyInfo(
     modifiers,
     action,
   };
-}
+};
 
 /**
  * picks the best action based on the key combination
  */
-function pickBestAction(
+const pickBestAction = (
   key: string,
   modifiers: Modifiers,
   action?: ActionPhase,
   mapOverrides?: StringMap
-) {
+) => {
   const _map = mapOverrides ? Object.assign({}, _MAP, mapOverrides) : _MAP;
 
   // if no action was picked in we should try to pick the one
@@ -362,73 +357,49 @@ function pickBestAction(
   }
 
   return action;
-}
+};
 
 /**
  * reverses the map lookup so that we can look for specific keys
  * to see what can and can't use keypress
  */
-function getReverseMap(map: StringMap): StringMap {
+const getReverseMap = (map: StringMap): StringMap => {
   const reverseMap = { ...map };
 
-  for (const key in _MAP) {
+  for (const key in Object.keys(_MAP)) {
     // pull out the numeric keypad from here cause keypress should
     // be able to detect the keys from the character
     if ((key as any) > 95 && (key as any) < 112) {
       continue;
     }
 
-    if (_MAP.hasOwnProperty(key)) {
-      reverseMap[_MAP[key]] = key;
-    }
+    reverseMap[_MAP[key]] = key;
   }
 
   return reverseMap;
-}
+};
 
 /**
  * checks if two arrays are equal
  */
-function modifiersMatch(modifiers1: Modifiers, modifiers2: Modifiers): boolean {
+const modifiersMatch = (
+  modifiers1: Modifiers,
+  modifiers2: Modifiers
+): boolean => {
   return modifiers1.sort().join(",") === modifiers2.sort().join(",");
-}
+};
 
 /**
  * determines if the keycode specified is a modifier key or not
  */
-function isModifier(key: string): key is ModifierKey {
+const isModifier = (key: string): key is ModifierKey => {
   return key === "shift" || key === "ctrl" || key === "alt" || key === "meta";
-}
+};
 
 /**
  * Converts from a string key combination to an array
  */
-function keysFromString(combination: string): string[] {
+const keysFromString = (combination: string): string[] => {
   if (combination === "+") return ["+"];
-  combination = combination.replace(/\+{2}/g, "+plus");
-  return combination.split("+");
-}
-
-function timesReduce<T>(
-  times: number,
-  callback: (index: number, acc: T) => T,
-  acc: T
-) {
-  return Array.from({ length: times }).reduce<T>(
-    (acc, _, index) => callback(index, acc),
-    acc
-  );
-}
-
-// let logKeys = (e) =>
-//     !e.repeat &&
-//     console.log(e.type, {
-//         key: e.key,
-//         code: e.code,
-//         keyCode: e.keyCode,
-//         which: e.which,
-//         charCode: e.charCode,
-//     });
-// window.addEventListener("keydown", logKeys);
-// window.addEventListener("keyup", logKeys);
-// window.addEventListener("keypress", logKeys);
+  return combination.replace(/\+{2}/g, "+plus").split("+");
+};
