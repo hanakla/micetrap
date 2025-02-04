@@ -8,7 +8,7 @@ import type {
 } from "./types";
 import { addListener, reduceToMap, toArray } from "./utils";
 
-export type { MicetrapCallback, ShouldStopCallback };
+export type { MicetrapCallback, MicetrapBind, ShouldStopCallback };
 
 export type Micetrap = {
   binds: Array<MicetrapBind>;

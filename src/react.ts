@@ -1,4 +1,11 @@
-import { useEffect, useLayoutEffect, useMemo, useReducer, useRef } from "react";
+import {
+  RefObject,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useReducer,
+  useRef,
+} from "react";
 import { Micetrap, micetrap, MicetrapOption } from "./index";
 import type { MicetrapBind } from "./types";
 import { addListener } from "./utils";
@@ -9,7 +16,7 @@ export function useDocumentMicetrap(binds: MicetrapBind[]) {
 
   const ref = useKeyboardEvents((e) => {
     mice.handleEvent(e, getBinds());
-  });
+  }, null);
 
   useEffect(() => {
     ref.current = document;
@@ -21,7 +28,8 @@ export function useDocumentMicetrap(binds: MicetrapBind[]) {
 
 export function useMicetrap<T extends Element>(
   binds: MicetrapBind[],
-  options?: MicetrapOption
+  options?: MicetrapOption,
+  inputRef?: RefObject<T | null> | null
 ): [ReactiveRefObject<T | null>, Micetrap] {
   const mice = useMemo(
     () =>
@@ -38,24 +46,25 @@ export function useMicetrap<T extends Element>(
   );
   const getBinds = useEffectCallback(() => binds);
 
-  const ref = useKeyboardEvents<T | null>((e) => {
+  const internalRef = useKeyboardEvents<T | null>((e) => {
     mice.handleEvent(e, getBinds());
-  });
+  }, inputRef);
 
   useEffect(() => {
     const prev = mice;
     return () => prev.destroy();
   }, [mice]);
 
-  return [ref, mice];
+  return [internalRef, mice];
 }
 
 const useKeyboardEvents = <T extends Element | Document | null>(
-  fn: (e: KeyboardEvent) => void
+  fn: (e: KeyboardEvent) => void,
+  inputRef: RefObject<T | null> | null | undefined
 ) => {
   const callback = useEffectCallback(fn);
 
-  return useReactiveRef<T | null>(null, (ref) => {
+  return useReactiveRef<T | null>(null, inputRef, (ref) => {
     if (!ref) return;
 
     const abort = new AbortController();
@@ -92,6 +101,7 @@ type ReactiveRefObject<T> = {
 
 function useReactiveRef<T>(
   initial: T,
+  inputRef: RefObject<T | null> | null | undefined,
   callback: (ref: T | null) => void | (() => void)
 ): ReactiveRefObject<T | null> {
   const ref = useRef<T | null>(initial);
@@ -107,6 +117,7 @@ function useReactiveRef<T>(
       set current(value) {
         const current = ref.current;
         ref.current = value;
+        if (inputRef) inputRef.current = value;
         if (current !== value) rerender();
       },
     }),
