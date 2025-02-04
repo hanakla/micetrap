@@ -10,6 +10,9 @@ import { Micetrap, micetrap, MicetrapOption } from "./index";
 import type { MicetrapBind } from "./types";
 import { addListener } from "./utils";
 
+const useIsomorphicLayoutEffect =
+  typeof window === "undefined" ? useEffect : useLayoutEffect;
+
 export function useDocumentMicetrap(binds: MicetrapBind[]) {
   const mice = useMemo(() => micetrap(), []);
   const getBinds = useEffectCallback(() => binds);
@@ -82,7 +85,7 @@ const useEffectCallback = <T extends (...args: any[]) => any>(cb: T) => {
   const stableRef = useRef<T | null>(null);
   const latestRef = useRef<T | null>(null);
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     latestRef.current = cb;
   }, [cb]);
 
@@ -107,7 +110,7 @@ function useReactiveRef<T>(
   const ref = useRef<T | null>(initial);
   const [c, rerender] = useReducer((x) => x + 1, 0);
 
-  useLayoutEffect(() => callback(ref.current), [c]);
+  useIsomorphicLayoutEffect(() => callback(ref.current), [c]);
 
   return useMemo(
     () => ({
