@@ -69,6 +69,7 @@ export const matchCombo = (
   phase?: ActionPhase,
   mapOverrides?: StringMap
 ): { complete: boolean; combo: string } | null => {
+  const action = event.type;
   combos = toArray(combos);
 
   for (let combo of combos) {
@@ -82,7 +83,8 @@ export const matchCombo = (
 
     if (
       keyInfo.key === character &&
-      modifiersMatch(keyInfo.modifiers, modifiers)
+      modifiersMatch(keyInfo.modifiers, modifiers) &&
+      action === keyInfo.action
     ) {
       return {
         complete: seq.length === seqLevel + 1,
