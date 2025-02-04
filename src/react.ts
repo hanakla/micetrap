@@ -1,7 +1,7 @@
 import {
   RefObject,
   useEffect,
-  useLayoutEffect,
+  useInsertionEffect,
   useMemo,
   useReducer,
   useRef,
@@ -9,9 +9,6 @@ import {
 import { Micetrap, micetrap, MicetrapOption } from "./index";
 import type { MicetrapBind } from "./types";
 import { addListener } from "./utils";
-
-const useIsomorphicLayoutEffect =
-  typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 export function useDocumentMicetrap(binds: MicetrapBind[]) {
   const mice = useMemo(() => micetrap(), []);
@@ -31,7 +28,7 @@ export function useDocumentMicetrap(binds: MicetrapBind[]) {
 
 export function useMicetrap<T extends Element>(
   binds: MicetrapBind[],
-  options?: MicetrapOption,
+  options?: MicetrapOption | null,
   inputRef?: RefObject<T | null> | null
 ): [ReactiveRefObject<T | null>, Micetrap] {
   const mice = useMemo(
@@ -67,7 +64,7 @@ const useKeyboardEvents = <T extends Element | Document | null>(
 ) => {
   const callback = useEffectCallback(fn);
 
-  return useReactiveRef<T | null>(null, inputRef, (ref) => {
+  const mount = useEffectCallback((ref: T | null) => {
     if (!ref) return;
 
     const abort = new AbortController();
@@ -79,13 +76,23 @@ const useKeyboardEvents = <T extends Element | Document | null>(
 
     return () => abort.abort();
   });
+
+  useEffect(() => {
+    if (!inputRef) return;
+    return mount(inputRef?.current);
+  }, [inputRef]);
+
+  return useReactiveRef<T | null>(null, inputRef, (ref) => {
+    if (inputRef) return;
+    return mount(ref);
+  });
 };
 
 const useEffectCallback = <T extends (...args: any[]) => any>(cb: T) => {
   const stableRef = useRef<T | null>(null);
   const latestRef = useRef<T | null>(null);
 
-  useIsomorphicLayoutEffect(() => {
+  useInsertionEffect(() => {
     latestRef.current = cb;
   }, [cb]);
 
@@ -108,9 +115,10 @@ function useReactiveRef<T>(
   callback: (ref: T | null) => void | (() => void)
 ): ReactiveRefObject<T | null> {
   const ref = useRef<T | null>(initial);
+  const usingRef = inputRef ?? ref;
   const [c, rerender] = useReducer((x) => x + 1, 0);
 
-  useIsomorphicLayoutEffect(() => callback(ref.current), [c]);
+  useEffect(() => callback(usingRef.current), [c]);
 
   return useMemo(
     () => ({
@@ -118,10 +126,10 @@ function useReactiveRef<T>(
         return ref.current;
       },
       set current(value) {
-        const current = ref.current;
+        const prev = ref.current;
         ref.current = value;
         if (inputRef) inputRef.current = value;
-        if (current !== value) rerender();
+        if (prev !== value) rerender();
       },
     }),
     []
