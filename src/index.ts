@@ -81,7 +81,7 @@ export const micetrap = (
     let matches: MatchResult[] = [];
     for (const bind of _binds) {
       const match = matchCombo(
-        bind.keys,
+        bind.keys as string | string[],
         e,
         sequenceState.length,
         bind.phase,

@@ -14,7 +14,7 @@ export type ModifierKey = "shift" | "ctrl" | "alt" | "meta";
 export type Modifiers = Array<ModifierKey>;
 
 export type MicetrapBind = {
-  keys: string | string[];
+  keys: string | readonly string[];
   handler: MicetrapCallback;
   phase?: ActionPhase;
   signal?: AbortSignal;
@@ -30,10 +30,7 @@ export type FlattenBind = {
   stopPropagation?: boolean;
 };
 
-export type MicetrapCallback = (
-  e: KeyboardEvent,
-  combo: string
-) => boolean | void;
+export type MicetrapCallback = (e: KeyboardEvent, combo: string) => void;
 
 export type ShouldStopCallback = (
   e: KeyboardEvent,

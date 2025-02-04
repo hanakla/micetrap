@@ -63,7 +63,7 @@ export const defaultShouldStopCallback: ShouldStopCallback = (
  * Checks if the given combo matches the event
  */
 export const matchCombo = (
-  combos: string | string[],
+  combos: string | readonly string[],
   event: KeyboardEvent,
   seqLevel: number = 0,
   phase?: ActionPhase,

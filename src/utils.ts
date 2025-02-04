@@ -21,8 +21,8 @@ export const reduceToMap = <T, R extends object>(
 
 export const fromCharCode = (code: number) => String.fromCharCode(code);
 
-export const toArray = <T>(value: T | T[]): T[] =>
-  Array.isArray(value) ? value : [value];
+export const toArray = <T>(value: T | T[] | readonly T[]): T[] =>
+  Array.isArray(value) ? value : ([value] as any);
 
 export const isMatchArray = <T>(a: T[], b: T[]) =>
   a.length === b.length && a.every((v, i) => v === b[i]);
