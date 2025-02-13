@@ -1,6 +1,6 @@
 {
   "name": "@hanakla/micetrap",
-  "version": "1.0.1-rc.7",
+  "version": "1.1.0",
   "description": "Simple library for handling keyboard shortcuts",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
